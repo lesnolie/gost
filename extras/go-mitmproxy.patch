@@ -1,19 +1,42 @@
 diff --git a/extras/go-mitmproxy/cert/cert.go b/extras/go-mitmproxy/cert/cert.go
-index 4a08303..01a1d78 100644
+index 4a08303..173944e 100644
 --- a/extras/go-mitmproxy/cert/cert.go
 +++ b/extras/go-mitmproxy/cert/cert.go
-@@ -300,6 +300,10 @@ func (ca *CA) saveCert() error {
+@@ -300,6 +300,11 @@ func (ca *CA) saveCert() error {
  }
  
  func (ca *CA) GetCert(commonName string) (*tls.Certificate, error) {
-+	if strings.Count(commonName, ".") > 1 {
++	ip := net.ParseIP(commonName)
++	if ip == nil && strings.Count(commonName, ".") > 1 {
 +		commonName = strings.SplitN(commonName, ".", 2)[1]
 +	}
 +
  	ca.cacheMu.Lock()
  	if val, ok := ca.cache.Get(commonName); ok {
  		ca.cacheMu.Unlock()
-@@ -344,7 +348,7 @@ func (ca *CA) DummyCert(commonName string) (*tls.Certificate, error) {
+@@ -309,7 +314,7 @@ func (ca *CA) GetCert(commonName string) (*tls.Certificate, error) {
+ 	ca.cacheMu.Unlock()
+ 
+ 	val, err := ca.group.Do(commonName, func() (interface{}, error) {
+-		cert, err := ca.DummyCert(commonName)
++		cert, err := ca.DummyCert(commonName, ip)
+ 		if err == nil {
+ 			ca.cacheMu.Lock()
+ 			ca.cache.Add(commonName, cert)
+@@ -326,7 +331,7 @@ func (ca *CA) GetCert(commonName string) (*tls.Certificate, error) {
+ }
+ 
+ // TODO: 是否应该支持多个 SubjectAltName
+-func (ca *CA) DummyCert(commonName string) (*tls.Certificate, error) {
++func (ca *CA) DummyCert(commonName string, ip net.IP) (*tls.Certificate, error) {
+ 	log.Debugf("ca DummyCert: %v", commonName)
+ 	template := &x509.Certificate{
+ 		SerialNumber: big.NewInt(time.Now().UnixNano() / 100000),
+@@ -340,11 +345,10 @@ func (ca *CA) DummyCert(commonName string) (*tls.Certificate, error) {
+ 		ExtKeyUsage:        []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth, x509.ExtKeyUsageClientAuth},
+ 	}
+ 
+-	ip := net.ParseIP(commonName)
  	if ip != nil {
  		template.IPAddresses = []net.IP{ip}
  	} else {

@@ -16,7 +16,7 @@ require (
 	git.torproject.org/pluggable-transports/goptlib.git v1.2.0
 	github.com/LiamHaworth/go-tproxy v0.0.0-20190726054950-ef7efd7f24ed
 	github.com/apernet/hysteria/core v1.3.5
-	github.com/apernet/quic-go v0.37.5-0.20230809210726-5508a358d07e
+	github.com/apernet/quic-go v0.38.2-0.20230902022200-c0e542a00ce6
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d
 	github.com/go-gost/gosocks4 v0.0.1
 	github.com/go-gost/gosocks5 v0.3.0
@@ -60,7 +60,7 @@ require (
 	github.com/klauspost/reedsolomon v1.9.15 // indirect
 	github.com/onsi/ginkgo/v2 v2.9.5 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/quic-go/qtls-go1-20 v0.3.1 // indirect
+	github.com/quic-go/qtls-go1-20 v0.3.3 // indirect
 	github.com/riobard/go-bloom v0.0.0-20200614022211-cdc8013cb5b3 // indirect
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/templexxx/cpu v0.0.7 // indirect

@@ -12,7 +12,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/apernet/hysteria/core"
+	congestion "github.com/apernet/hysteria/core"
 	"github.com/apernet/quic-go"
 	"github.com/go-log/log"
 )
@@ -177,8 +177,8 @@ const (
 	MbpsToBps                = 1024 * 1024 / 8  // Mbit/Byte
 	DefaultServerSendBps     = 100 * MbpsToBps  // 100Mbps
 	DefaultClientSendBps     = 20 * MbpsToBps   // 20Mbps
-	DefaultReceiveWindowConn = 16 * 1024 * 1024 // 16MB
-	DefaultReceiveWindow     = 40 * 1024 * 1024 // 40MB
+	DefaultReceiveWindowConn = 8 * 1024 * 1024  // 8MB
+	DefaultReceiveWindow     = 20 * 1024 * 1024 // 20MB
 	DefaultMaxConnClient     = 1024
 )
 
@@ -409,8 +409,7 @@ func tlsConfigQUICALPN(tlsConfig *tls.Config) *tls.Config {
 	if tlsConfig == nil {
 		panic("quic: tlsconfig is nil")
 	}
-	tlsConfigQUIC := &tls.Config{}
-	*tlsConfigQUIC = *tlsConfig
+	tlsConfigQUIC := tlsConfig.Clone()
 	tlsConfigQUIC.NextProtos = []string{"http/3", "quic/v1"}
 	return tlsConfigQUIC
 }
