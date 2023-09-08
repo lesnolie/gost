@@ -25,21 +25,20 @@ WireGuard客户端
 
 ```bash
 # 1234是任意正整数(1~65535)
-./gost -L auto://127.0.0.1:8000 -F wg://:1234?c=proxy.conf
+./gost -L auto://:8080 -F wg://:1234?c=proxy.conf
 ```
 
-* 仅支持作为WireGuard客户端
+* 仅支持作为WireGuard客户端，且不支持代理链
 * `proxy.conf`配置请参考[wireproxy](https://github.com/pufferffish/wireproxy/blob/master/README.md)
 
 Hysteria-QUIC
 
 * 使用Apernet魔改的[quic-go](https://github.com/apernet/quic-go)加快QUIC传输速度
 * 其他参数
-  * `keepalive`: 保持连接
-  * `idle`: 空闲超时
   * `send_mbps`: 数据发送速率
   * `recv_window_conn`: 流接收窗口大小
   * `recv_window`: 连接接收窗口大小
+  * `max_conn_client`: 单客户端最大活跃连接数
 
 快速握手
 
@@ -50,21 +49,21 @@ Hysteria-QUIC
   * 缩减端到端TLS握手产生的RTT([参考](https://github.com/lqqyt2423/go-mitmproxy))
   * 用法
 
-```bash
-# 服务器
-./gost -L auto://127.0.0.1:8001?mitm_encrypt=true
-# 客户端
-./gost -L auto://127.0.0.1:8000?mitm_decrypt=true -F auto://127.0.0.1:8001
-```
+  ```bash
+  # 服务端
+  ./gost -L auto://:1234?mitm_encrypt=true
+  # 客户端
+  ./gost -L auto://:8080?mitm_decrypt=true -F auto://server_ip:1234
+  ```
 
-* * 需要将`~/.mitmproxy/mitmproxy-ca-cert.cer`添加为`受信任的根证书颁发机构证书`
+  * 需要将`~/.mitmproxy/mitmproxy-ca-cert.cer`添加为`受信任的根证书颁发机构证书`
   * 其他参数
     * `mitm_caroot`: 根证书路径，默认为`~/.mitmproxy`
     * `mitm_bypass`: MITM旁路，用于兼容因采用证书锁定(Certificate Pinning)而无法被MITM的APP，如Facebook、X、Telegram
 
-#### 关于构建
+#### 编译构建
 
-本Fork依赖修改后的第三方库，因此需要使用`git apply`命令对第三方库进行patch
+本Fork依赖修改后的第三方库，需要使用`git apply`命令对第三方库进行patch
 
 ```bash
 git clone --recursive https://github.com/happyharryh/gost.git
@@ -73,7 +72,7 @@ git apply extras/*.patch
 go build ./cmd/gost
 ```
 
-你也可以切换到上述功能对应的分支，单独实现某一功能
+也可以切换到上述功能对应的分支，单独实现某一功能
 
 特性
 ------

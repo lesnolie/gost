@@ -15,7 +15,7 @@ replace golang.zx2c4.com/wireguard => github.com/zhsj/wireguard-go v0.0.0-202308
 require (
 	git.torproject.org/pluggable-transports/goptlib.git v1.2.0
 	github.com/LiamHaworth/go-tproxy v0.0.0-20190726054950-ef7efd7f24ed
-	github.com/apernet/hysteria/core v1.3.5
+	github.com/apernet/hysteria/core v1.3.5-0.20230902023249-e11762a196e4
 	github.com/apernet/quic-go v0.38.2-0.20230902022200-c0e542a00ce6
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d
 	github.com/go-gost/gosocks4 v0.0.1
@@ -27,10 +27,10 @@ require (
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da
 	github.com/gorilla/websocket v1.5.0
 	github.com/klauspost/compress v1.13.6
-	github.com/lqqyt2423/go-mitmproxy v1.7.0
+	github.com/lqqyt2423/go-mitmproxy v1.7.1
 	github.com/lunixbochs/struc v0.0.0-20200707160740-784aaebc1d40
 	github.com/miekg/dns v1.1.47
-	github.com/octeep/wireproxy v1.0.6
+	github.com/octeep/wireproxy v1.0.7
 	github.com/ryanuber/go-glob v1.0.0
 	github.com/shadowsocks/go-shadowsocks2 v0.1.5
 	github.com/shadowsocks/shadowsocks-go v0.0.0-20200409064450-3e585ff90601
