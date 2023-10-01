@@ -39,6 +39,7 @@ Hysteria-QUIC
   * `recv_window_conn`: 流接收窗口大小
   * `recv_window`: 连接接收窗口大小
   * `max_conn_client`: 单客户端最大活跃连接数
+  * `cipher`: 考虑到QUIC本身自带TLS加密，这里将原版gost的cipher算法简化，提升性能
 
 快速握手
 

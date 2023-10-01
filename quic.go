@@ -2,12 +2,8 @@ package gost
 
 import (
 	"context"
-	"crypto/aes"
-	"crypto/cipher"
-	"crypto/rand"
 	"crypto/tls"
 	"errors"
-	"io"
 	"net"
 	"sync"
 	"time"
@@ -15,6 +11,7 @@ import (
 	congestion "github.com/apernet/hysteria/core"
 	"github.com/apernet/quic-go"
 	"github.com/go-log/log"
+	"golang.org/x/crypto/blake2s"
 )
 
 type quicSession struct {
@@ -97,7 +94,12 @@ func (tr *quicTransporter) Dial(addr string, options ...DialOption) (conn net.Co
 		}
 
 		if tr.config != nil && tr.config.Key != nil {
-			pc = &quicCipherConn{PacketConn: pc, key: tr.config.Key}
+			keyCapacity := len(tr.config.Key) + cipherSuffixLen
+			pc = &quicCipherConn{
+				PacketConn: pc,
+				keyR:       append(make([]byte, 0, keyCapacity), tr.config.Key...),
+				keyW:       append(make([]byte, 0, keyCapacity), tr.config.Key...),
+			}
 		}
 
 		session, err = tr.initSession(udpAddr, pc)
@@ -180,6 +182,8 @@ const (
 	DefaultReceiveWindowConn = 8 * 1024 * 1024  // 8MB
 	DefaultReceiveWindow     = 20 * 1024 * 1024 // 20MB
 	DefaultMaxConnClient     = 1024
+
+	cipherSuffixLen = 4
 )
 
 type quicListener struct {
@@ -239,7 +243,12 @@ func QUICListener(addr string, config *QUICConfig) (Listener, error) {
 	}
 
 	if config.Key != nil {
-		conn = &quicCipherConn{PacketConn: conn, key: config.Key}
+		keyCapacity := len(config.Key) + cipherSuffixLen
+		conn = &quicCipherConn{
+			PacketConn: conn,
+			keyR:       append(make([]byte, 0, keyCapacity), config.Key...),
+			keyW:       append(make([]byte, 0, keyCapacity), config.Key...),
+		}
 	}
 
 	ln, err := quic.ListenEarly(conn, tlsConfigQUICALPN(tlsConfig), quicConfig)
@@ -334,75 +343,27 @@ func (c *quicConn) Close() error {
 
 type quicCipherConn struct {
 	net.PacketConn
-	key []byte
+	keyR, keyW []byte
 }
 
 func (conn *quicCipherConn) ReadFrom(data []byte) (n int, addr net.Addr, err error) {
-	n, addr, err = conn.PacketConn.ReadFrom(data)
-	if err != nil {
-		return
+	if n, addr, err = conn.PacketConn.ReadFrom(data); n > cipherSuffixLen {
+		key := blake2s.Sum256(append(conn.keyR, data[n-cipherSuffixLen:n]...))
+		for i, c := range data[:n-cipherSuffixLen] {
+			data[i] = c ^ key[i%blake2s.Size]
+		}
 	}
-	b, err := conn.decrypt(data[:n])
-	if err != nil {
-		return
-	}
-
-	copy(data, b)
-
-	return len(b), addr, nil
+	return n, addr, err
 }
 
 func (conn *quicCipherConn) WriteTo(data []byte, addr net.Addr) (n int, err error) {
-	b, err := conn.encrypt(data)
-	if err != nil {
-		return
+	if n := len(data); n > cipherSuffixLen {
+		key := blake2s.Sum256(append(conn.keyW, data[n-cipherSuffixLen:n]...))
+		for i, c := range data[:n-cipherSuffixLen] {
+			data[i] = c ^ key[i%blake2s.Size]
+		}
 	}
-
-	_, err = conn.PacketConn.WriteTo(b, addr)
-	if err != nil {
-		return
-	}
-
-	return len(b), nil
-}
-
-func (conn *quicCipherConn) encrypt(data []byte) ([]byte, error) {
-	c, err := aes.NewCipher(conn.key)
-	if err != nil {
-		return nil, err
-	}
-
-	gcm, err := cipher.NewGCM(c)
-	if err != nil {
-		return nil, err
-	}
-
-	nonce := make([]byte, gcm.NonceSize())
-	if _, err = io.ReadFull(rand.Reader, nonce); err != nil {
-		return nil, err
-	}
-
-	return gcm.Seal(nonce, nonce, data, nil), nil
-}
-
-func (conn *quicCipherConn) decrypt(data []byte) ([]byte, error) {
-	c, err := aes.NewCipher(conn.key)
-	if err != nil {
-		return nil, err
-	}
-
-	gcm, err := cipher.NewGCM(c)
-	if err != nil {
-		return nil, err
-	}
-
-	nonceSize := gcm.NonceSize()
-	if len(data) < nonceSize {
-		return nil, errors.New("ciphertext too short")
-	}
-
-	nonce, ciphertext := data[:nonceSize], data[nonceSize:]
-	return gcm.Open(nil, nonce, ciphertext, nil)
+	return conn.PacketConn.WriteTo(data, addr)
 }
 
 func tlsConfigQUICALPN(tlsConfig *tls.Config) *tls.Config {

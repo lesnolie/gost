@@ -1,7 +1,6 @@
 package main
 
 import (
-	"crypto/sha256"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/base64"
@@ -225,8 +224,7 @@ func parseChainNode(ns string) (nodes []gost.Node, err error) {
 		}
 
 		if cipher := node.Get("cipher"); cipher != "" {
-			sum := sha256.Sum256([]byte(cipher))
-			config.Key = sum[:]
+			config.Key = []byte(cipher)
 		}
 
 		tr = gost.QUICTransporter(config)
@@ -489,8 +487,7 @@ func (r *route) GenRouters() ([]router, error) {
 				}
 			}
 			if cipher := node.Get("cipher"); cipher != "" {
-				sum := sha256.Sum256([]byte(cipher))
-				config.Key = sum[:]
+				config.Key = []byte(cipher)
 			}
 
 			ln, err = gost.QUICListener(node.Addr, config)
