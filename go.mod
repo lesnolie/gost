@@ -1,6 +1,8 @@
 module github.com/ginuerzh/gost
 
-go 1.20
+go 1.21
+
+toolchain go1.21.1
 
 replace github.com/lqqyt2423/go-mitmproxy => ./extras/go-mitmproxy
 
@@ -15,8 +17,8 @@ replace golang.zx2c4.com/wireguard => github.com/zhsj/wireguard-go v0.0.0-202308
 require (
 	git.torproject.org/pluggable-transports/goptlib.git v1.2.0
 	github.com/LiamHaworth/go-tproxy v0.0.0-20190726054950-ef7efd7f24ed
-	github.com/apernet/hysteria/core v1.3.5-0.20230902023249-e11762a196e4
-	github.com/apernet/quic-go v0.38.2-0.20230902022200-c0e542a00ce6
+	github.com/apernet/hysteria/core v0.0.0-00010101000000-000000000000
+	github.com/apernet/quic-go v0.39.1-0.20231005215143-343a640d2145
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d
 	github.com/go-gost/gosocks4 v0.0.1
 	github.com/go-gost/gosocks5 v0.3.0
@@ -52,7 +54,6 @@ require (
 	github.com/dchest/siphash v1.2.2 // indirect
 	github.com/go-ini/ini v1.66.4 // indirect
 	github.com/go-task/slim-sprig v0.0.0-20230315185526-52ccab3ef572 // indirect
-	github.com/golang/mock v1.6.0 // indirect
 	github.com/google/btree v1.0.1 // indirect
 	github.com/google/gopacket v1.1.19 // indirect
 	github.com/google/pprof v0.0.0-20230131232505-5a9e8f65f08f // indirect
@@ -60,15 +61,15 @@ require (
 	github.com/klauspost/reedsolomon v1.9.15 // indirect
 	github.com/onsi/ginkgo/v2 v2.9.5 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/quic-go/qtls-go1-20 v0.3.3 // indirect
+	github.com/quic-go/qtls-go1-20 v0.3.4 // indirect
 	github.com/riobard/go-bloom v0.0.0-20200614022211-cdc8013cb5b3 // indirect
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/templexxx/cpu v0.0.7 // indirect
 	github.com/templexxx/xorsimd v0.4.1 // indirect
 	github.com/tjfoc/gmsm v1.4.1 // indirect
 	github.com/xtaci/lossyconn v0.0.0-20200209145036-adba10fffc37 // indirect
-	github.com/zhangyunhao116/fastrand v0.3.0 // indirect
 	gitlab.com/yawning/edwards25519-extra.git v0.0.0-20211229043746-2f91fcc9fbdb // indirect
+	go.uber.org/mock v0.3.0 // indirect
 	golang.org/x/exp v0.0.0-20230725093048-515e97ebf090 // indirect
 	golang.org/x/mod v0.12.0 // indirect
 	golang.org/x/sys v0.10.0 // indirect

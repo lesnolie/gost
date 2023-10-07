@@ -35,7 +35,7 @@ Hysteria-QUIC
 
 * 使用Apernet魔改的[quic-go](https://github.com/apernet/quic-go)加快QUIC传输速度
 * 其他参数
-  * `send_mbps`: 数据发送速率
+  * `send_mbps`: 数据发送速率，与Hysteria 2一致（默认为0，使用BBR，大于0则使用Brutal）
   * `recv_window_conn`: 流接收窗口大小
   * `recv_window`: 连接接收窗口大小
   * `max_conn_client`: 单客户端最大活跃连接数

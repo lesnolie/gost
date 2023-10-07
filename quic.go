@@ -46,9 +46,6 @@ func QUICTransporter(config *QUICConfig) Transporter {
 		config = &QUICConfig{}
 	}
 
-	if config.SendBps == 0 {
-		config.SendBps = DefaultClientSendBps
-	}
 	if config.ReceiveWindowConn == 0 {
 		config.ReceiveWindowConn = DefaultReceiveWindowConn
 	}
@@ -152,7 +149,11 @@ func (tr *quicTransporter) initSession(addr net.Addr, conn net.PacketConn) (*qui
 		log.Logf("quic dial %s: %v", addr, err)
 		return nil, err
 	}
-	congestion.UseBrutal(session, config.SendBps)
+	if config.SendBps > 0 {
+		congestion.UseBrutal(session, config.SendBps)
+	} else {
+		congestion.UseBBR(session)
+	}
 	return &quicSession{session: session}, nil
 }
 
@@ -177,8 +178,6 @@ type QUICConfig struct {
 
 const (
 	MbpsToBps                = 1024 * 1024 / 8  // Mbit/Byte
-	DefaultServerSendBps     = 100 * MbpsToBps  // 100Mbps
-	DefaultClientSendBps     = 20 * MbpsToBps   // 20Mbps
 	DefaultReceiveWindowConn = 8 * 1024 * 1024  // 8MB
 	DefaultReceiveWindow     = 20 * 1024 * 1024 // 20MB
 	DefaultMaxConnClient     = 1024
@@ -198,9 +197,6 @@ func QUICListener(addr string, config *QUICConfig) (Listener, error) {
 		config = &QUICConfig{}
 	}
 
-	if config.SendBps == 0 {
-		config.SendBps = DefaultServerSendBps
-	}
 	if config.ReceiveWindowConn == 0 {
 		config.ReceiveWindowConn = DefaultReceiveWindowConn
 	}
@@ -275,7 +271,11 @@ func (l *quicListener) listenLoop(bps uint64) {
 			close(l.errChan)
 			return
 		}
-		congestion.UseBrutal(session, bps)
+		if bps > 0 {
+			congestion.UseBrutal(session, bps)
+		} else {
+			congestion.UseBBR(session)
+		}
 		go l.sessionLoop(session)
 	}
 }
