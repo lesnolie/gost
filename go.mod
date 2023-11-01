@@ -12,13 +12,13 @@ replace github.com/apernet/hysteria/core => ./extras/hysteria/core
 
 replace github.com/templexxx/cpu v0.0.7 => github.com/templexxx/cpu v0.0.10-0.20211111114238-98168dcec14a
 
-replace golang.zx2c4.com/wireguard => github.com/zhsj/wireguard-go v0.0.0-20230810174642-19a9a3630666
+replace golang.zx2c4.com/wireguard => golang.zx2c4.com/wireguard v0.0.0-20231022001213-2e0774f246fb
 
 require (
 	git.torproject.org/pluggable-transports/goptlib.git v1.2.0
 	github.com/LiamHaworth/go-tproxy v0.0.0-20190726054950-ef7efd7f24ed
 	github.com/apernet/hysteria/core v0.0.0-00010101000000-000000000000
-	github.com/apernet/quic-go v0.39.1-0.20231011033454-52db2775486f
+	github.com/apernet/quic-go v0.39.4-0.20231029220436-0faa281e4a77
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d
 	github.com/go-gost/gosocks4 v0.0.1
 	github.com/go-gost/gosocks5 v0.3.0
@@ -77,8 +77,8 @@ require (
 	golang.org/x/sys v0.13.0 // indirect
 	golang.org/x/text v0.13.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
-	golang.org/x/tools v0.11.1 // indirect
+	golang.org/x/tools v0.13.0 // indirect
 	golang.zx2c4.com/wintun v0.0.0-20230126152724-0fa3db229ce2 // indirect
 	golang.zx2c4.com/wireguard v0.0.0-20220829161405-d1d08426b27b // indirect
-	gvisor.dev/gvisor v0.0.0-20230806223740-1b6e502fedca // indirect
+	gvisor.dev/gvisor v0.0.0-20230927004350-cbd86285d259 // indirect
 )
