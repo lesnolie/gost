@@ -198,9 +198,9 @@ func (h *shadowHandler) Handle(conn net.Conn) {
 	}
 	defer cc.Close()
 
-	if h.options.MITM != nil && addr.Port == 443 {
-		if mconn, mcc, err := h.options.MITM.Handshake(conn, cc, addr.Host); err == nil {
-			conn, cc = mconn, mcc
+	if mcc, ok := cc.(*zeroMITMConn); ok {
+		if mconn, err := mcc.WrapMITMConn(conn); err == nil {
+			conn = mconn
 		} else {
 			log.Logf("[ss] %s -> %s : %s", conn.RemoteAddr(), conn.LocalAddr(), err)
 			return

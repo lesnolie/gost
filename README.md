@@ -1,19 +1,6 @@
 GO Simple Tunnel
 ======
 
-### GO语言实现的安全隧道
-
-[![GoDoc](https://godoc.org/github.com/ginuerzh/gost?status.svg)](https://godoc.org/github.com/ginuerzh/gost)
-[![Go Report Card](https://goreportcard.com/badge/github.com/ginuerzh/gost)](https://goreportcard.com/report/github.com/ginuerzh/gost)
-[![codecov](https://codecov.io/gh/ginuerzh/gost/branch/master/graphs/badge.svg)](https://codecov.io/gh/ginuerzh/gost/branch/master)
-[![GitHub release](https://img.shields.io/github/release/ginuerzh/gost.svg)](https://github.com/ginuerzh/gost/releases/latest)
-[![Docker](https://img.shields.io/docker/pulls/ginuerzh/gost.svg)](https://hub.docker.com/r/ginuerzh/gost/)
-[![gost](https://snapcraft.io/gost/badge.svg)](https://snapcraft.io/gost)
- 
-[English README](README_en.md)
-
-### ！！！[V3版本已经可用，欢迎抢先体验](https://latest.gost.run)！！！
-
 Fork说明
 ------
 
@@ -41,26 +28,23 @@ Hysteria-QUIC
   * `max_conn_client`: 单客户端最大活跃连接数
   * `cipher`: 考虑到QUIC本身自带TLS加密，这里将原版gost的cipher算法简化，提升性能
 
-快速握手
+Zero-Connector
 
-* 客户端抢答
-  * 实现0-RTT HTTP代理([参考](https://github.com/wen-long/gost/commit/6d7a605fc0cac5edf1b89c16af72e73d9e83451b))
-  * 当客户端和服务器端均为gost时，此功能自动生效
-* 中间人攻击(MITM)
-  * 缩减端到端TLS握手产生的RTT([参考](https://github.com/lqqyt2423/go-mitmproxy))
-  * 用法
+* 极简化连接逻辑，实现0-RTT连接
+* 用法
 
-  ```bash
-  # 服务端
-  ./gost -L auto://:1234?mitm_encrypt=true
-  # 客户端
-  ./gost -L auto://:8080?mitm_decrypt=true -F auto://server_ip:1234
-  ```
+```bash
+# 服务端
+./gost -L zero://:1234
+# 客户端
+./gost -L auto://:8080 -F zero://server_ip:1234
+```
 
-  * 需要将`~/.mitmproxy/mitmproxy-ca-cert.cer`添加为`受信任的根证书颁发机构证书`
-  * 其他参数
-    * `mitm_caroot`: 根证书路径，默认为`~/.mitmproxy`
-    * `mitm_bypass`: MITM旁路，用于兼容因采用证书锁定(Certificate Pinning)而无法被MITM的APP，如Facebook、X、Telegram
+* 其他参数
+  * `mitm`: 利用中间人攻击(MITM)缩减端到端TLS握手产生的RTT([参考](https://github.com/lqqyt2423/go-mitmproxy))
+  * `mitm_caroot`: 根证书路径，默认为`~/.mitmproxy`，需要将该目录下的`mitmproxy-ca-cert.cer`添加为`受信任的根证书颁发机构证书`
+  * `mitm_insecure`: 跳过网站证书验证
+  * `mitm_bypass`: MITM旁路，用于兼容因采用证书锁定(Certificate Pinning)而无法被MITM的APP，如Facebook、X、Telegram
 
 #### 编译构建
 
@@ -72,8 +56,20 @@ cd gost
 git apply extras/*.patch
 go build ./cmd/gost
 ```
+------
 
-也可以切换到上述功能对应的分支，单独实现某一功能
+### GO语言实现的安全隧道
+
+[![GoDoc](https://godoc.org/github.com/ginuerzh/gost?status.svg)](https://godoc.org/github.com/ginuerzh/gost)
+[![Go Report Card](https://goreportcard.com/badge/github.com/ginuerzh/gost)](https://goreportcard.com/report/github.com/ginuerzh/gost)
+[![codecov](https://codecov.io/gh/ginuerzh/gost/branch/master/graphs/badge.svg)](https://codecov.io/gh/ginuerzh/gost/branch/master)
+[![GitHub release](https://img.shields.io/github/release/ginuerzh/gost.svg)](https://github.com/ginuerzh/gost/releases/latest)
+[![Docker](https://img.shields.io/docker/pulls/ginuerzh/gost.svg)](https://hub.docker.com/r/ginuerzh/gost/)
+[![gost](https://snapcraft.io/gost/badge.svg)](https://snapcraft.io/gost)
+ 
+[English README](README_en.md)
+
+### ！！！[V3版本已经可用，欢迎抢先体验](https://latest.gost.run)！！！
 
 特性
 ------

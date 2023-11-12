@@ -974,9 +974,9 @@ func (h *socks5Handler) handleConnect(conn net.Conn, req *gosocks5.Request) {
 			conn.RemoteAddr(), conn.LocalAddr(), rep)
 	}
 
-	if h.options.MITM != nil && req.Addr.Port == 443 {
-		if mconn, mcc, err := h.options.MITM.Handshake(conn, cc, req.Addr.Host); err == nil {
-			conn, cc = mconn, mcc
+	if mcc, ok := cc.(*zeroMITMConn); ok {
+		if mconn, err := mcc.WrapMITMConn(conn); err == nil {
+			conn = mconn
 		} else {
 			log.Logf("[socks5] %s -> %s : %s", conn.RemoteAddr(), conn.LocalAddr(), err)
 			return

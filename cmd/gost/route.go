@@ -284,6 +284,20 @@ func parseChainNode(ns string) (nodes []gost.Node, err error) {
 		connector = gost.RelayConnector(node.User)
 	case "wg":
 		connector = gost.WireguardConnector()
+	case "zero":
+		var zeroMITMConfig *gost.ZeroMITMConfig
+		if node.GetBool("mitm") {
+			if ca, err := cert.NewCA(node.Get("mitm_caroot")); err == nil {
+				zeroMITMConfig = &gost.ZeroMITMConfig{
+					CA:       ca,
+					Insecure: node.GetBool("mitm_insecure"),
+					Bypass:   parseBypass(node.Get("mitm_bypass")),
+				}
+			} else {
+				return nil, err
+			}
+		}
+		connector = gost.ZeroConnector(zeroMITMConfig)
 	default:
 		connector = gost.AutoConnector(node.User)
 	}
@@ -625,6 +639,8 @@ func (r *route) GenRouters() ([]router, error) {
 			handler = gost.DNSHandler(node.Remote)
 		case "relay":
 			handler = gost.RelayHandler(node.Remote)
+		case "zero":
+			handler = gost.ZeroHandler()
 		default:
 			// start from 2.5, if remote is not empty, then we assume that it is a forward tunnel.
 			if node.Remote != "" {
@@ -661,24 +677,6 @@ func (r *route) GenRouters() ([]router, error) {
 			)
 		}
 
-		var mitm *gost.MITM
-		if md, me := node.GetBool("mitm_decrypt"), node.GetBool("mitm_encrypt"); md || me {
-			mitm = &gost.MITM{Decrypt: md, Encrypt: me}
-
-			if md {
-				ca, err := cert.NewCA(node.Get("mitm_caroot"))
-				if err != nil {
-					return nil, err
-				}
-
-				mitm.GetCertificate = func(clientHello *tls.ClientHelloInfo) (*tls.Certificate, error) {
-					return ca.GetCert(clientHello.ServerName)
-				}
-			}
-
-			mitm.Bypass = parseBypass(node.Get("mitm_bypass"))
-		}
-
 		handler.Init(
 			gost.AddrHandlerOption(ln.Addr().String()),
 			gost.ChainHandlerOption(chain),
@@ -703,7 +701,6 @@ func (r *route) GenRouters() ([]router, error) {
 			gost.IPRoutesHandlerOption(tunRoutes...),
 			gost.ProxyAgentHandlerOption(node.Get("proxyAgent")),
 			gost.HTTPTunnelHandlerOption(node.GetBool("httpTunnel")),
-			gost.MITMHandlerOption(mitm),
 		)
 
 		rt := router{

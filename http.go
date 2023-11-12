@@ -87,61 +87,21 @@ func (c *httpConnector) ConnectContext(ctx context.Context, conn net.Conn, netwo
 		log.Log(string(dump))
 	}
 
-	return newHandshakeDeferConn(conn, req), nil
-}
-
-type handshakeDeferConn struct {
-	net.Conn
-	r             *bufio.Reader
-	req           *http.Request
-	handshakeDone bool
-}
-
-func newHandshakeDeferConn(conn net.Conn, req *http.Request) *handshakeDeferConn {
-	return &handshakeDeferConn{
-		Conn:          conn,
-		r:             bufio.NewReader(conn),
-		req:           req,
-		handshakeDone: false,
-	}
-}
-
-func (c *handshakeDeferConn) Read(b []byte) (int, error) {
-	if !c.handshakeDone {
-		resp, err := http.ReadResponse(c.r, c.req)
-		if err != nil {
-			return 0, err
-		}
-
-		if Debug {
-			dump, _ := httputil.DumpResponse(resp, false)
-			log.Log(string(dump))
-		}
-
-		if resp.StatusCode != http.StatusOK {
-			return 0, fmt.Errorf("%s", resp.Status)
-		}
-
-		c.handshakeDone = true
+	resp, err := http.ReadResponse(bufio.NewReader(conn), req)
+	if err != nil {
+		return nil, err
 	}
 
-	return c.r.Read(b)
-}
-
-type httpPrefixedConn struct {
-	net.Conn
-	r *bufio.Reader
-}
-
-func newHttpPrefixedConn(conn net.Conn) *httpPrefixedConn {
-	return &httpPrefixedConn{
-		Conn: conn,
-		r:    bufio.NewReader(conn),
+	if Debug {
+		dump, _ := httputil.DumpResponse(resp, false)
+		log.Log(string(dump))
 	}
-}
 
-func (c *httpPrefixedConn) Read(b []byte) (int, error) {
-	return c.r.Read(b)
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("%s", resp.Status)
+	}
+
+	return conn, nil
 }
 
 type httpHandler struct {
@@ -167,15 +127,14 @@ func (h *httpHandler) Init(options ...HandlerOption) {
 func (h *httpHandler) Handle(conn net.Conn) {
 	defer conn.Close()
 
-	c := newHttpPrefixedConn(conn)
-	req, err := http.ReadRequest(c.r)
+	req, err := http.ReadRequest(bufio.NewReader(conn))
 	if err != nil {
 		log.Logf("[http] %s - %s : %s", conn.RemoteAddr(), conn.LocalAddr(), err)
 		return
 	}
 	defer req.Body.Close()
 
-	h.handleRequest(c, req)
+	h.handleRequest(conn, req)
 }
 
 func (h *httpHandler) handleRequest(conn net.Conn, req *http.Request) {
@@ -191,8 +150,7 @@ func (h *httpHandler) handleRequest(conn net.Conn, req *http.Request) {
 	}
 
 	host := req.Host
-	hostname, port, _ := net.SplitHostPort(host)
-	if port == "" {
+	if _, port, _ := net.SplitHostPort(host); port == "" {
 		host = net.JoinHostPort(host, "80")
 	}
 
@@ -350,9 +308,9 @@ func (h *httpHandler) handleRequest(conn net.Conn, req *http.Request) {
 		}
 	}
 
-	if h.options.MITM != nil && port == "443" {
-		if mconn, mcc, err := h.options.MITM.Handshake(conn, cc, hostname); err == nil {
-			conn, cc = mconn, mcc
+	if mcc, ok := cc.(*zeroMITMConn); ok {
+		if mconn, err := mcc.WrapMITMConn(conn); err == nil {
+			conn = mconn
 		} else {
 			log.Logf("[http] %s -> %s : %s", conn.RemoteAddr(), conn.LocalAddr(), err)
 			return

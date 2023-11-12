@@ -115,6 +115,7 @@ func ParseNode(s string) (node Node, err error) {
 	case "dns", "dot", "doh":
 	case "relay":
 	case "wg":
+	case "zero":
 	default:
 		node.Protocol = ""
 	}
