@@ -6,6 +6,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"net"
+	"strings"
 	"sync"
 	"time"
 
@@ -13,6 +14,7 @@ import (
 	"github.com/golang/groupcache/lru"
 	"github.com/lqqyt2423/go-mitmproxy/cert"
 	"github.com/lunixbochs/struc"
+	"golang.org/x/net/publicsuffix"
 )
 
 type zeroTcpRequest struct {
@@ -44,13 +46,30 @@ var (
 )
 
 type ZeroMITMConfig struct {
-	CA       *cert.CA
 	Insecure bool
 	Bypass   *Bypass
+	ca       *cert.CA
+}
+
+func (c *ZeroMITMConfig) SetCertificate(path string) (err error) {
+	c.ca, err = cert.NewCA(path)
+	return
 }
 
 func (c *ZeroMITMConfig) GetCertificate(chi *tls.ClientHelloInfo) (*tls.Certificate, error) {
-	return c.CA.GetCert(chi.ServerName)
+	if c.ca == nil {
+		return nil, fmt.Errorf("no certificate")
+	}
+
+	commonName := chi.ServerName
+	if net.ParseIP(commonName) == nil {
+		eTLD1, err := publicsuffix.EffectiveTLDPlusOne(commonName)
+		if err == nil && commonName != eTLD1 {
+			commonName = "*." + strings.SplitN(commonName, ".", 2)[1]
+		}
+	}
+
+	return c.ca.GetCert(commonName)
 }
 
 type zeroConnector struct {

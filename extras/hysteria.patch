@@ -1,4 +1,0 @@
-diff --git a/extras/hysteria/core/internal/congestion/utils.go b/extras/hysteria/core/utils.go
-similarity index 100%
-rename from extras/hysteria/core/internal/congestion/utils.go
-rename to extras/hysteria/core/utils.go

@@ -4,21 +4,15 @@ go 1.21
 
 toolchain go1.21.1
 
-replace github.com/lqqyt2423/go-mitmproxy => ./extras/go-mitmproxy
-
-replace github.com/octeep/wireproxy => ./extras/wireproxy
-
-replace github.com/apernet/hysteria/core => ./extras/hysteria/core
+replace github.com/apernet/hysteria/core => ./extras/hysteria-core
 
 replace github.com/templexxx/cpu v0.0.7 => github.com/templexxx/cpu v0.0.10-0.20211111114238-98168dcec14a
-
-replace golang.zx2c4.com/wireguard => golang.zx2c4.com/wireguard v0.0.0-20231022001213-2e0774f246fb
 
 require (
 	git.torproject.org/pluggable-transports/goptlib.git v1.2.0
 	github.com/LiamHaworth/go-tproxy v0.0.0-20190726054950-ef7efd7f24ed
 	github.com/apernet/hysteria/core v0.0.0-00010101000000-000000000000
-	github.com/apernet/quic-go v0.39.4-0.20231029220436-0faa281e4a77
+	github.com/apernet/quic-go v0.40.1-0.20231112225043-e7f3af208dee
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d
 	github.com/go-gost/gosocks4 v0.0.1
 	github.com/go-gost/gosocks5 v0.3.0
@@ -33,7 +27,7 @@ require (
 	github.com/lunixbochs/struc v0.0.0-20200707160740-784aaebc1d40
 	github.com/mdlayher/vsock v1.2.1
 	github.com/miekg/dns v1.1.47
-	github.com/octeep/wireproxy v1.0.7
+	github.com/octeep/wireproxy v1.0.7-0.20231018022111-0f4d79dea884
 	github.com/ryanuber/go-glob v1.0.0
 	github.com/shadowsocks/go-shadowsocks2 v0.1.5
 	github.com/shadowsocks/shadowsocks-go v0.0.0-20200409064450-3e585ff90601
@@ -44,6 +38,7 @@ require (
 	gitlab.com/yawning/obfs4.git v0.0.0-20220204003609-77af0cba934d
 	golang.org/x/crypto v0.14.0
 	golang.org/x/net v0.17.0
+	golang.zx2c4.com/wireguard v0.0.0-20231022001213-2e0774f246fb
 )
 
 require (
@@ -63,7 +58,7 @@ require (
 	github.com/mdlayher/socket v0.4.1 // indirect
 	github.com/onsi/ginkgo/v2 v2.9.5 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/quic-go/qtls-go1-20 v0.3.4 // indirect
+	github.com/quic-go/qtls-go1-20 v0.4.1 // indirect
 	github.com/riobard/go-bloom v0.0.0-20200614022211-cdc8013cb5b3 // indirect
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/templexxx/cpu v0.0.7 // indirect
@@ -76,9 +71,8 @@ require (
 	golang.org/x/sync v0.3.0 // indirect
 	golang.org/x/sys v0.13.0 // indirect
 	golang.org/x/text v0.13.0 // indirect
-	golang.org/x/time v0.3.0 // indirect
+	golang.org/x/time v0.4.0 // indirect
 	golang.org/x/tools v0.13.0 // indirect
 	golang.zx2c4.com/wintun v0.0.0-20230126152724-0fa3db229ce2 // indirect
-	golang.zx2c4.com/wireguard v0.0.0-20231010133717-42ec952eadc2 // indirect
 	gvisor.dev/gvisor v0.0.0-20230927004350-cbd86285d259 // indirect
 )

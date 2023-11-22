@@ -13,7 +13,6 @@ import (
 
 	"github.com/ginuerzh/gost"
 	"github.com/go-log/log"
-	"github.com/lqqyt2423/go-mitmproxy/cert"
 )
 
 type stringList []string
@@ -247,11 +246,9 @@ func parseChainNode(ns string) (nodes []gost.Node, err error) {
 	case "vsock":
 		tr = gost.VSOCKTransporter()
 	case "wg":
-		dial, err := gost.WireguardDial(node.Get("c"))
-		if err != nil {
+		if tr, err = gost.WireguardTransporter(node.Get("c")); err != nil {
 			return nil, err
 		}
-		tr = gost.WireguardTransporter(dial)
 	default:
 		tr = gost.TCPTransporter()
 	}
@@ -285,19 +282,17 @@ func parseChainNode(ns string) (nodes []gost.Node, err error) {
 	case "wg":
 		connector = gost.WireguardConnector()
 	case "zero":
-		var zeroMITMConfig *gost.ZeroMITMConfig
+		var config *gost.ZeroMITMConfig
 		if node.GetBool("mitm") {
-			if ca, err := cert.NewCA(node.Get("mitm_caroot")); err == nil {
-				zeroMITMConfig = &gost.ZeroMITMConfig{
-					CA:       ca,
-					Insecure: node.GetBool("mitm_insecure"),
-					Bypass:   parseBypass(node.Get("mitm_bypass")),
-				}
-			} else {
+			config = &gost.ZeroMITMConfig{
+				Insecure: node.GetBool("mitm_insecure"),
+				Bypass:   parseBypass(node.Get("mitm_bypass")),
+			}
+			if err = config.SetCertificate(node.Get("mitm_caroot")); err != nil {
 				return nil, err
 			}
 		}
-		connector = gost.ZeroConnector(zeroMITMConfig)
+		connector = gost.ZeroConnector(config)
 	default:
 		connector = gost.AutoConnector(node.User)
 	}

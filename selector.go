@@ -213,6 +213,11 @@ type InvalidFilter struct{}
 func (f *InvalidFilter) Filter(nodes []Node) []Node {
 	nl := []Node{}
 	for i := range nodes {
+		if nodes[i].Transport == "wg" {
+			nl = append(nl, nodes[i])
+			continue
+		}
+
 		_, sport, _ := net.SplitHostPort(nodes[i].Addr)
 		if port, _ := strconv.Atoi(sport); port > 0 {
 			nl = append(nl, nodes[i])

@@ -11,8 +11,7 @@ WireGuard客户端
 * 用法
 
 ```bash
-# 1234是任意正整数(1~65535)
-./gost -L auto://:8080 -F wg://:1234?c=proxy.conf
+./gost -L auto://:8080 -F wg://?c=proxy.conf
 ```
 
 * 仅支持作为WireGuard客户端，且不支持代理链
@@ -22,7 +21,7 @@ Hysteria-QUIC
 
 * 使用Apernet魔改的[quic-go](https://github.com/apernet/quic-go)加快QUIC传输速度
 * 其他参数
-  * `send_mbps`: 数据发送速率，与Hysteria 2一致（默认为0，使用BBR，大于0则使用Brutal）
+  * `send_mbps`: 数据发送速率，等于0则使用BBR(默认)，大于0则使用Brutal
   * `recv_window_conn`: 流接收窗口大小
   * `recv_window`: 连接接收窗口大小
   * `max_conn_client`: 单客户端最大活跃连接数
@@ -41,20 +40,21 @@ Zero-Connector
 ```
 
 * 其他参数
-  * `mitm`: 利用中间人攻击(MITM)缩减端到端TLS握手产生的RTT([参考](https://github.com/lqqyt2423/go-mitmproxy))
+  * `mitm`: 是否开启中间人攻击(MITM)，缩减端到端TLS握手产生的RTT([参考](https://github.com/lqqyt2423/go-mitmproxy))
   * `mitm_caroot`: 根证书路径，默认为`~/.mitmproxy`，需要将该目录下的`mitmproxy-ca-cert.cer`添加为`受信任的根证书颁发机构证书`
   * `mitm_insecure`: 跳过网站证书验证
-  * `mitm_bypass`: MITM旁路，用于兼容因采用证书锁定(Certificate Pinning)而无法被MITM的APP，如Facebook、X、Telegram
+  * `mitm_bypass`: MITM旁路，用于兼容因采用证书锁定(Certificate Pinning)而无法被MITM的情形
 
-#### 编译构建
+#### 克隆说明
 
-本Fork依赖修改后的第三方库，需要使用`git apply`命令对第三方库进行patch
-
+本Fork依赖第三方库，克隆仓库时需要增加`--recursive`选项
 ```bash
 git clone --recursive https://github.com/happyharryh/gost.git
+```
+对于Windows系统，还需要重建一次软链接
+```bash
 cd gost
-git apply extras/*.patch
-go build ./cmd/gost
+git -c core.symlinks=true checkout .
 ```
 ------
 
