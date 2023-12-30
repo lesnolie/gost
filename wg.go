@@ -1,11 +1,12 @@
 package gost
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"log"
 	"net"
+	"reflect"
+	_ "unsafe"
 
 	"github.com/octeep/wireproxy"
 	"golang.zx2c4.com/wireguard/conn"
@@ -13,27 +14,16 @@ import (
 	"golang.zx2c4.com/wireguard/tun/netstack"
 )
 
-type wireguardConnector struct {
-}
+//go:linkname createIPCRequest github.com/octeep/wireproxy.createIPCRequest
+func createIPCRequest(conf *wireproxy.DeviceConfig) (*wireproxy.DeviceSetting, error)
 
-func WireguardConnector() Connector {
-	return &wireguardConnector{}
-}
-
-func (c *wireguardConnector) Connect(conn net.Conn, address string, options ...ConnectOption) (net.Conn, error) {
-	return c.ConnectContext(context.Background(), conn, "tcp", address, options...)
-}
-
-func (c *wireguardConnector) ConnectContext(ctx context.Context, conn net.Conn, network, address string, options ...ConnectOption) (net.Conn, error) {
-	return conn.(*wireguardConn).DialContext(ctx, network, address)
-}
-
-type wireguardTransporter struct {
-	conn *wireguardConn
-}
-
-func WireguardTransporter(confPath string) (Transporter, error) {
+func NewWireguardTun(confPath string) (*netstack.Net, error) {
 	conf, err := wireproxy.ParseConfig(confPath)
+	if err != nil {
+		return nil, err
+	}
+
+	setting, err := createIPCRequest(conf.Device)
 	if err != nil {
 		return nil, err
 	}
@@ -52,27 +42,7 @@ func WireguardTransporter(confPath string) (Transporter, error) {
 	}
 	dev := device.NewDevice(tun, conn.NewDefaultBind(), logger)
 
-	request := &bytes.Buffer{}
-	fmt.Fprintf(request, "private_key=%s\n", conf.Device.SecretKey)
-	for _, peer := range conf.Device.Peers {
-		fmt.Fprintf(request, "public_key=%s\n", peer.PublicKey)
-		fmt.Fprintf(request, "persistent_keepalive_interval=%d\n", peer.KeepAlive)
-		fmt.Fprintf(request, "preshared_key=%s\n", peer.PreSharedKey)
-
-		if peer.Endpoint != nil {
-			fmt.Fprintf(request, "endpoint=%s\n", *peer.Endpoint)
-		}
-
-		if len(peer.AllowedIPs) > 0 {
-			for _, ip := range peer.AllowedIPs {
-				fmt.Fprintf(request, "allowed_ip=%s\n", ip.String())
-			}
-		} else {
-			fmt.Fprintf(request, "allowed_ip=0.0.0.0/0\nallowed_ip=::0/0\n")
-		}
-	}
-
-	err = dev.IpcSetOperation(request)
+	err = dev.IpcSet(reflect.ValueOf(setting).Elem().FieldByName("ipcRequest").String())
 	if err != nil {
 		return nil, err
 	}
@@ -82,24 +52,33 @@ func WireguardTransporter(confPath string) (Transporter, error) {
 		return nil, err
 	}
 
-	return &wireguardTransporter{
-		conn: &wireguardConn{DialContext: tnet.DialContext},
-	}, nil
+	return tnet, nil
+}
+
+type wireguardConnector struct {
+	tnet *netstack.Net
+}
+
+func WireguardConnector(tnet *netstack.Net) Connector {
+	return &wireguardConnector{tnet: tnet}
+}
+
+func (c *wireguardConnector) Connect(conn net.Conn, address string, options ...ConnectOption) (net.Conn, error) {
+	return c.ConnectContext(context.Background(), conn, "tcp", address, options...)
+}
+
+func (c *wireguardConnector) ConnectContext(ctx context.Context, conn net.Conn, network, address string, options ...ConnectOption) (net.Conn, error) {
+	return c.tnet.DialContext(ctx, network, address)
+}
+
+type wireguardTransporter struct {
+	tcpTransporter
+}
+
+func WireguardTransporter() Transporter {
+	return &wireguardTransporter{}
 }
 
 func (tr *wireguardTransporter) Dial(addr string, options ...DialOption) (conn net.Conn, err error) {
-	return tr.conn, nil
-}
-
-func (tr *wireguardTransporter) Handshake(conn net.Conn, options ...HandshakeOption) (net.Conn, error) {
-	return conn, nil
-}
-
-func (tr *wireguardTransporter) Multiplex() bool {
-	return true
-}
-
-type wireguardConn struct {
-	nopConn
-	DialContext func(ctx context.Context, network, addr string) (net.Conn, error)
+	return nopClientConn, nil
 }

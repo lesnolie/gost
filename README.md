@@ -47,15 +47,19 @@ Zero-Connector
 
 #### 克隆说明
 
-本Fork依赖第三方库，克隆仓库时需要增加`--recursive`选项
+本Fork包含git子仓库，克隆时需要增加`--recursive`选项
+
 ```bash
 git clone --recursive https://github.com/happyharryh/gost.git
 ```
-对于Windows系统，还需要重建一次软链接
+
+在Windows平台克隆后，还需要手动重建一次软链接
+
 ```bash
 cd gost
 git -c core.symlinks=true checkout .
 ```
+
 ------
 
 ### GO语言实现的安全隧道

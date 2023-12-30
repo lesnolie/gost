@@ -1,6 +1,10 @@
 package gost
 
-import "net"
+import (
+	"net"
+
+	"github.com/apernet/hysteria/extras/correctnet"
+)
 
 // tcpTransporter is a raw TCP transporter.
 type tcpTransporter struct{}
@@ -44,15 +48,7 @@ func TCPListener(addr string) (Listener, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	network := "tcp"
-	if laddr.IP.Equal(net.IPv4zero) {
-		network = "tcp4"
-	} else if laddr.IP.Equal(net.IPv6zero) {
-		network = "tcp6"
-	}
-
-	ln, err := net.ListenTCP(network, laddr)
+	ln, err := correctnet.ListenTCP("tcp", laddr)
 	if err != nil {
 		return nil, err
 	}

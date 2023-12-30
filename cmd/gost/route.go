@@ -246,9 +246,7 @@ func parseChainNode(ns string) (nodes []gost.Node, err error) {
 	case "vsock":
 		tr = gost.VSOCKTransporter()
 	case "wg":
-		if tr, err = gost.WireguardTransporter(node.Get("c")); err != nil {
-			return nil, err
-		}
+		tr = gost.WireguardTransporter()
 	default:
 		tr = gost.TCPTransporter()
 	}
@@ -280,16 +278,22 @@ func parseChainNode(ns string) (nodes []gost.Node, err error) {
 	case "relay":
 		connector = gost.RelayConnector(node.User)
 	case "wg":
-		connector = gost.WireguardConnector()
+		tnet, err := gost.NewWireguardTun(node.Get("c"))
+		if err != nil {
+			return nil, err
+		}
+		connector = gost.WireguardConnector(tnet)
 	case "zero":
 		var config *gost.ZeroMITMConfig
 		if node.GetBool("mitm") {
+			ca, err := gost.NewZeroMITMCA(node.Get("mitm_ca"))
+			if err != nil {
+				return nil, err
+			}
 			config = &gost.ZeroMITMConfig{
+				CA:       ca,
 				Insecure: node.GetBool("mitm_insecure"),
 				Bypass:   parseBypass(node.Get("mitm_bypass")),
-			}
-			if err = config.SetCertificate(node.Get("mitm_caroot")); err != nil {
-				return nil, err
 			}
 		}
 		connector = gost.ZeroConnector(config)

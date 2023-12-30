@@ -198,13 +198,9 @@ func (h *shadowHandler) Handle(conn net.Conn) {
 	}
 	defer cc.Close()
 
-	if mcc, ok := cc.(*zeroMITMConn); ok {
-		if mconn, err := mcc.WrapMITMConn(conn); err == nil {
-			conn = mconn
-		} else {
-			log.Logf("[ss] %s -> %s : %s", conn.RemoteAddr(), conn.LocalAddr(), err)
-			return
-		}
+	if err := maybeWrapMITMConn(&conn, cc); err != nil {
+		log.Logf("[ss] %s -> %s : %s", conn.RemoteAddr(), conn.LocalAddr(), err)
+		return
 	}
 
 	log.Logf("[ss] %s <-> %s", conn.RemoteAddr(), host)

@@ -8,7 +8,8 @@ import (
 	"sync"
 	"time"
 
-	congestion "github.com/apernet/hysteria/core"
+	"github.com/apernet/hysteria/core/congestion"
+	"github.com/apernet/hysteria/extras/correctnet"
 	"github.com/apernet/quic-go"
 	"github.com/go-log/log"
 	"golang.org/x/crypto/blake2s"
@@ -85,7 +86,7 @@ func (tr *quicTransporter) Dial(addr string, options ...DialOption) (conn net.Co
 
 	if !ok {
 		var pc net.PacketConn
-		pc, err = net.ListenUDP("udp", &net.UDPAddr{IP: net.IPv4zero, Port: 0})
+		pc, err = net.ListenUDP("udp", nil)
 		if err != nil {
 			return
 		}
@@ -233,7 +234,7 @@ func QUICListener(addr string, config *QUICConfig) (Listener, error) {
 	if err != nil {
 		return nil, err
 	}
-	conn, err = net.ListenUDP("udp", udpAddr)
+	conn, err = correctnet.ListenUDP("udp", udpAddr)
 	if err != nil {
 		return nil, err
 	}

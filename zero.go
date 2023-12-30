@@ -46,18 +46,17 @@ var (
 )
 
 type ZeroMITMConfig struct {
+	*cert.CA
 	Insecure bool
 	Bypass   *Bypass
-	ca       *cert.CA
 }
 
-func (c *ZeroMITMConfig) SetCertificate(path string) (err error) {
-	c.ca, err = cert.NewCA(path)
-	return
+func NewZeroMITMCA(caroot string) (*cert.CA, error) {
+	return cert.NewCA(caroot)
 }
 
 func (c *ZeroMITMConfig) GetCertificate(chi *tls.ClientHelloInfo) (*tls.Certificate, error) {
-	if c.ca == nil {
+	if c.CA == nil {
 		return nil, fmt.Errorf("no certificate")
 	}
 
@@ -69,7 +68,7 @@ func (c *ZeroMITMConfig) GetCertificate(chi *tls.ClientHelloInfo) (*tls.Certific
 		}
 	}
 
-	return c.ca.GetCert(commonName)
+	return c.GetCert(commonName)
 }
 
 type zeroConnector struct {
@@ -131,8 +130,13 @@ type zeroMITMConn struct {
 	mitmConfig *ZeroMITMConfig
 }
 
-func (c *zeroMITMConn) WrapMITMConn(conn net.Conn) (net.Conn, error) {
-	tconn := tls.Server(conn, &tls.Config{
+func maybeWrapMITMConn(conn *net.Conn, cc net.Conn) error {
+	mcc, ok := cc.(*zeroMITMConn)
+	if !ok {
+		return nil
+	}
+
+	tconn := tls.Server(*conn, &tls.Config{
 		GetConfigForClient: func(chi *tls.ClientHelloInfo) (*tls.Config, error) {
 			key := zeroHTTP2CacheKey{ServerName: chi.ServerName}
 			key.SupportH1, key.SupportH2 = mitmString2Bool(chi.SupportedProtos)
@@ -141,9 +145,9 @@ func (c *zeroMITMConn) WrapMITMConn(conn net.Conn) (net.Conn, error) {
 			useH2, ok := zeroHTTP2Cache.Get(key)
 			zeroHTTP2CacheMu.Unlock()
 
-			if err := struc.Pack(c, &zeroTlsRequest{
+			if err := struc.Pack(mcc, &zeroTlsRequest{
 				ServerName: key.ServerName,
-				Insecure:   c.mitmConfig.Insecure,
+				Insecure:   mcc.mitmConfig.Insecure,
 				SupportH1:  key.SupportH1,
 				SupportH2:  key.SupportH2,
 				NeedProto:  !ok,
@@ -153,7 +157,7 @@ func (c *zeroMITMConn) WrapMITMConn(conn net.Conn) (net.Conn, error) {
 
 			if !ok {
 				var response zeroTlsResponse
-				if err := struc.Unpack(c, &response); err != nil {
+				if err := struc.Unpack(mcc, &response); err != nil {
 					return nil, err
 				}
 				useH2 = response.UseH2
@@ -164,17 +168,18 @@ func (c *zeroMITMConn) WrapMITMConn(conn net.Conn) (net.Conn, error) {
 			}
 
 			return &tls.Config{
-				GetCertificate: c.mitmConfig.GetCertificate,
+				GetCertificate: mcc.mitmConfig.GetCertificate,
 				NextProtos:     mitmBool2String(!useH2.(bool), useH2.(bool)),
 			}, nil
 		},
 	})
 
 	if err := tconn.Handshake(); err != nil {
-		return nil, err
+		return err
 	}
 
-	return tconn, nil
+	*conn = tconn
+	return nil
 }
 
 type zeroHandler struct {
@@ -219,7 +224,8 @@ func (h *zeroHandler) Handle(conn net.Conn) {
 	for i := 0; i < retries; i++ {
 		route, err = h.options.Chain.selectRouteFor(request.Address)
 		if err != nil {
-			log.Logf("[zero] %s -> %s : %s", conn.RemoteAddr(), conn.LocalAddr(), err)
+			log.Logf("[zero] %s -> %s : %s",
+				conn.RemoteAddr(), conn.LocalAddr(), err)
 			continue
 		}
 
@@ -275,15 +281,6 @@ func (h *zeroHandler) Handle(conn net.Conn) {
 		}
 
 		cc = tcc
-	}
-
-	if mcc, ok := cc.(*zeroMITMConn); ok {
-		if mconn, err := mcc.WrapMITMConn(conn); err == nil {
-			conn = mconn
-		} else {
-			log.Logf("[zero] %s -> %s : %s", conn.RemoteAddr(), conn.LocalAddr(), err)
-			return
-		}
 	}
 
 	log.Logf("[zero] %s <-> %s", conn.RemoteAddr(), request.Address)
