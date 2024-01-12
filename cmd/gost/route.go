@@ -285,15 +285,15 @@ func parseChainNode(ns string) (nodes []gost.Node, err error) {
 		connector = gost.WireguardConnector(tnet)
 	case "zero":
 		var config *gost.ZeroMITMConfig
-		if node.GetBool("mitm") {
-			ca, err := gost.NewZeroMITMCA(node.Get("mitm_ca"))
+		if mitm := node.Get("mitm"); mitm != "" {
+			ca, err := gost.NewZeroMITMCA(node.Get("mitm_caroot"))
 			if err != nil {
 				return nil, err
 			}
 			config = &gost.ZeroMITMConfig{
 				CA:       ca,
+				Hosts:    parseBypass(mitm),
 				Insecure: node.GetBool("mitm_insecure"),
-				Bypass:   parseBypass(node.Get("mitm_bypass")),
 			}
 		}
 		connector = gost.ZeroConnector(config)

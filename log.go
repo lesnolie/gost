@@ -3,9 +3,15 @@ package gost
 import (
 	"fmt"
 	"log"
+	"os"
+	"strconv"
 )
 
 func init() {
+	if flags, _ := strconv.Atoi(os.Getenv("LOGFLAGS")); flags > 0 {
+		log.SetFlags(flags)
+		return
+	}
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 }
 

@@ -68,6 +68,19 @@ func (c *wireguardConnector) Connect(conn net.Conn, address string, options ...C
 }
 
 func (c *wireguardConnector) ConnectContext(ctx context.Context, conn net.Conn, network, address string, options ...ConnectOption) (net.Conn, error) {
+	opts := &ConnectOptions{}
+	for _, option := range options {
+		option(opts)
+	}
+
+	timeout := opts.Timeout
+	if timeout <= 0 {
+		timeout = ConnectTimeout
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
 	return c.tnet.DialContext(ctx, network, address)
 }
 

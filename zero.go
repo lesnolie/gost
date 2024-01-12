@@ -47,8 +47,8 @@ var (
 
 type ZeroMITMConfig struct {
 	*cert.CA
+	Hosts    *Bypass
 	Insecure bool
-	Bypass   *Bypass
 }
 
 func NewZeroMITMCA(caroot string) (*cert.CA, error) {
@@ -107,7 +107,7 @@ func (c *zeroConnector) ConnectContext(ctx context.Context, conn net.Conn, netwo
 		return nil, err
 	}
 
-	useMITM := c.mitmConfig != nil && port == "443" && !c.mitmConfig.Bypass.Contains(host)
+	useMITM := c.mitmConfig != nil && port == "443" && c.mitmConfig.Hosts.Contains(host)
 	if err := struc.Pack(conn, &zeroTcpRequest{
 		Address: address,
 		UseMITM: useMITM,
