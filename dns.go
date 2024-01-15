@@ -58,8 +58,9 @@ func (h *dnsHandler) Init(opts ...HandlerOption) {
 func (h *dnsHandler) Handle(conn net.Conn) {
 	defer conn.Close()
 
-	b := mPool.Get().([]byte)
-	defer mPool.Put(b)
+	_b := mPool.Get().(*[]byte)
+	defer mPool.Put(_b)
+	b := *_b
 
 	n, err := conn.Read(b)
 	if err != nil {

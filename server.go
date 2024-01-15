@@ -120,9 +120,9 @@ func transport(rw1, rw2 io.ReadWriter) error {
 }
 
 func copyBuffer(dst io.Writer, src io.Reader) error {
-	buf := lPool.Get().([]byte)
+	buf := lPool.Get().(*[]byte)
 	defer lPool.Put(buf)
 
-	_, err := io.CopyBuffer(dst, src, buf)
+	_, err := io.CopyBuffer(dst, src, *buf)
 	return err
 }

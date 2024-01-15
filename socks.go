@@ -1245,8 +1245,9 @@ func (h *socks5Handler) transportUDP(relay, peer net.PacketConn) (err error) {
 	var clientAddr net.Addr
 
 	go func() {
-		b := mPool.Get().([]byte)
-		defer mPool.Put(b)
+		_b := mPool.Get().(*[]byte)
+		defer mPool.Put(_b)
+		b := *_b
 
 		for {
 			n, laddr, err := relay.ReadFrom(b)
@@ -1282,8 +1283,9 @@ func (h *socks5Handler) transportUDP(relay, peer net.PacketConn) (err error) {
 	}()
 
 	go func() {
-		b := mPool.Get().([]byte)
-		defer mPool.Put(b)
+		_b := mPool.Get().(*[]byte)
+		defer mPool.Put(_b)
+		b := *_b
 
 		for {
 			n, raddr, err := peer.ReadFrom(b)
@@ -1325,8 +1327,9 @@ func (h *socks5Handler) tunnelClientUDP(uc *net.UDPConn, cc net.Conn) (err error
 	var clientAddr *net.UDPAddr
 
 	go func() {
-		b := mPool.Get().([]byte)
-		defer mPool.Put(b)
+		_b := mPool.Get().(*[]byte)
+		defer mPool.Put(_b)
+		b := *_b
 
 		for {
 			n, addr, err := uc.ReadFromUDP(b)
@@ -1465,8 +1468,9 @@ func (h *socks5Handler) tunnelServerUDP(cc net.Conn, pc net.PacketConn) (err err
 	errc := make(chan error, 2)
 
 	go func() {
-		b := mPool.Get().([]byte)
-		defer mPool.Put(b)
+		_b := mPool.Get().(*[]byte)
+		defer mPool.Put(_b)
+		b := *_b
 
 		for {
 			n, addr, err := pc.ReadFrom(b)
@@ -2044,8 +2048,9 @@ func (c *socks5UDPConn) Read(b []byte) (n int, err error) {
 }
 
 func (c *socks5UDPConn) ReadFrom(b []byte) (n int, addr net.Addr, err error) {
-	data := mPool.Get().([]byte)
-	defer mPool.Put(data)
+	_data := mPool.Get().(*[]byte)
+	defer mPool.Put(_data)
+	data := *_data
 
 	n, err = c.UDPConn.Read(data)
 	if err != nil {

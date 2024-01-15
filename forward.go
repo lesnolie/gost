@@ -708,7 +708,7 @@ func (l *udpRemoteForwardListener) listenLoop() {
 				}
 
 				select {
-				case uc.rChan <- b[:n]:
+				case uc.rChan <- rBytes{b: b[:n]}:
 					if Debug {
 						log.Logf("[rudp] %s >>> %s : length %d", raddr, l.Addr(), n)
 					}

@@ -61,8 +61,9 @@ func (c *shadowConnector) ConnectContext(ctx context.Context, conn net.Conn, net
 	if err != nil {
 		return nil, err
 	}
-	rawaddr := sPool.Get().([]byte)
-	defer sPool.Put(rawaddr)
+	_rawaddr := sPool.Get().(*[]byte)
+	defer sPool.Put(_rawaddr)
+	rawaddr := *_rawaddr
 
 	n, err := socksAddr.Encode(rawaddr)
 	if err != nil {
@@ -345,8 +346,9 @@ func (h *shadowUDPHandler) transportPacket(conn, cc net.PacketConn) (err error) 
 	go func() {
 		for {
 			err := func() error {
-				b := mPool.Get().([]byte)
-				defer mPool.Put(b)
+				_b := mPool.Get().(*[]byte)
+				defer mPool.Put(_b)
+				b := *_b
 
 				n, addr, err := conn.ReadFrom(b)
 				if err != nil {
@@ -382,8 +384,9 @@ func (h *shadowUDPHandler) transportPacket(conn, cc net.PacketConn) (err error) 
 	go func() {
 		for {
 			err := func() error {
-				b := mPool.Get().([]byte)
-				defer mPool.Put(b)
+				_b := mPool.Get().(*[]byte)
+				defer mPool.Put(_b)
+				b := *_b
 
 				n, addr, err := cc.ReadFrom(b)
 				if err != nil {
@@ -457,8 +460,9 @@ func (h *shadowUDPHandler) transportUDP(conn net.Conn, cc net.PacketConn) error 
 	go func() {
 		for {
 			er := func() (err error) {
-				b := mPool.Get().([]byte)
-				defer mPool.Put(b)
+				_b := mPool.Get().(*[]byte)
+				defer mPool.Put(_b)
+				b := *_b
 
 				n, addr, err := cc.ReadFrom(b)
 				if err != nil {
@@ -519,8 +523,9 @@ type shadowUDPPacketConn struct {
 }
 
 func (c *shadowUDPPacketConn) ReadFrom(b []byte) (n int, addr net.Addr, err error) {
-	buf := mPool.Get().([]byte)
-	defer mPool.Put(buf)
+	_buf := mPool.Get().(*[]byte)
+	defer mPool.Put(_buf)
+	buf := *_buf
 
 	buf[0] = 0
 	buf[1] = 0
@@ -558,8 +563,9 @@ func (c *shadowUDPPacketConn) WriteTo(b []byte, addr net.Addr) (n int, err error
 		return
 	}
 
-	buf := mPool.Get().([]byte)
-	defer mPool.Put(buf)
+	_buf := mPool.Get().(*[]byte)
+	defer mPool.Put(_buf)
+	buf := *_buf
 
 	copy(buf, rawaddr[:nn])
 	n = copy(buf[nn:], b)
@@ -616,8 +622,9 @@ func initShadowCipher(info *url.Userinfo) (cipher core.Cipher) {
 
 func readSocksAddr(r io.Reader) (*gosocks5.Addr, error) {
 	addr := &gosocks5.Addr{}
-	b := sPool.Get().([]byte)
-	defer sPool.Put(b)
+	_b := sPool.Get().(*[]byte)
+	defer sPool.Put(_b)
+	b := *_b
 
 	_, err := io.ReadFull(r, b[:1])
 	if err != nil {

@@ -353,8 +353,9 @@ func (c *relayConn) Write(b []byte) (n int, err error) {
 	nsize := 2 + len(b)
 	var buf []byte
 	if nsize <= mediumBufferSize {
-		buf = mPool.Get().([]byte)
-		defer mPool.Put(buf)
+		_buf := mPool.Get().(*[]byte)
+		defer mPool.Put(_buf)
+		buf = *_buf
 	} else {
 		buf = make([]byte, nsize)
 	}

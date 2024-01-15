@@ -90,9 +90,9 @@ func UDPListener(addr string, cfg *UDPListenConfig) (Listener, error) {
 func (l *udpListener) listenLoop() {
 	for {
 		// NOTE: this buffer will be released in the udpServerConn after read.
-		b := mPool.Get().([]byte)
+		b := mPool.Get().(*[]byte)
 
-		n, raddr, err := l.ln.ReadFrom(b)
+		n, raddr, err := l.ln.ReadFrom(*b)
 		if err != nil {
 			log.Logf("[udp] peer -> %s : %s", l.Addr(), err)
 			l.Close()
@@ -123,7 +123,7 @@ func (l *udpListener) listenLoop() {
 		}
 
 		select {
-		case conn.rChan <- b[:n]:
+		case conn.rChan <- rBytes{(*b)[:n], func() { mPool.Put(b) }}:
 			if Debug {
 				log.Logf("[udp] %s >>> %s : length %d", raddr, l.Addr(), n)
 			}
@@ -196,11 +196,16 @@ func (m *udpConnMap) Size() int64 {
 type udpServerConn struct {
 	conn       net.PacketConn
 	raddr      net.Addr
-	rChan      chan []byte
+	rChan      chan rBytes
 	closed     chan struct{}
 	closeMutex sync.Mutex
 	nopChan    chan int
 	config     *udpServerConnConfig
+}
+
+type rBytes struct {
+	b   []byte
+	put func()
 }
 
 type udpServerConnConfig struct {
@@ -224,7 +229,7 @@ func newUDPServerConn(conn net.PacketConn, raddr net.Addr, cfg *udpServerConnCon
 	c := &udpServerConn{
 		conn:    conn,
 		raddr:   raddr,
-		rChan:   make(chan []byte, qsize),
+		rChan:   make(chan rBytes, qsize),
 		closed:  make(chan struct{}),
 		nopChan: make(chan int),
 		config:  cfg,
@@ -241,9 +246,9 @@ func (c *udpServerConn) Read(b []byte) (n int, err error) {
 func (c *udpServerConn) ReadFrom(b []byte) (n int, addr net.Addr, err error) {
 	select {
 	case bb := <-c.rChan:
-		n = copy(b, bb)
-		if cap(bb) == mediumBufferSize {
-			mPool.Put(bb[:cap(bb)])
+		n = copy(b, bb.b)
+		if bb.put != nil {
+			bb.put()
 		}
 	case <-c.closed:
 		err = errors.New("read from closed connection")

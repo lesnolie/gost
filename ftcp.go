@@ -120,7 +120,7 @@ func (l *fakeTCPListener) listenLoop() {
 		}
 
 		select {
-		case conn.rChan <- b[:n]:
+		case conn.rChan <- rBytes{b: b[:n]}:
 			if Debug {
 				log.Logf("[ftcp] %s >>> %s : length %d", raddr, l.Addr(), n)
 			}
