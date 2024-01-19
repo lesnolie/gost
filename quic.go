@@ -66,16 +66,6 @@ func (tr *quicTransporter) Dial(addr string, options ...DialOption) (conn net.Co
 		option(opts)
 	}
 
-	timeout := opts.Timeout
-	if timeout <= 0 {
-		timeout = DialTimeout
-	}
-
-	udpAddr, err := net.ResolveUDPAddr("udp", addr)
-	if err != nil {
-		return nil, err
-	}
-
 	tr.sessionMutex.Lock()
 	defer tr.sessionMutex.Unlock()
 
@@ -90,6 +80,12 @@ func (tr *quicTransporter) Dial(addr string, options ...DialOption) (conn net.Co
 	}
 
 	if !ok {
+		var udpAddr net.Addr
+		udpAddr, err = net.ResolveUDPAddr("udp", addr)
+		if err != nil {
+			return
+		}
+
 		var pc net.PacketConn
 		pc, err = net.ListenUDP("udp", nil)
 		if err != nil {
@@ -105,7 +101,7 @@ func (tr *quicTransporter) Dial(addr string, options ...DialOption) (conn net.Co
 			}
 		}
 
-		session, err = tr.initSession(udpAddr, pc, timeout)
+		session, err = tr.initSession(udpAddr, pc)
 		if err != nil {
 			pc.Close()
 			return nil, err
@@ -127,7 +123,7 @@ func (tr *quicTransporter) Handshake(conn net.Conn, options ...HandshakeOption) 
 	return conn, nil
 }
 
-func (tr *quicTransporter) initSession(addr net.Addr, conn net.PacketConn, timeout time.Duration) (*quicSession, error) {
+func (tr *quicTransporter) initSession(addr net.Addr, conn net.PacketConn) (*quicSession, error) {
 	config := tr.config
 	if config == nil {
 		config = &QUICConfig{}
@@ -150,11 +146,7 @@ func (tr *quicTransporter) initSession(addr net.Addr, conn net.PacketConn, timeo
 		InitialConnectionReceiveWindow: config.ReceiveWindow,
 		MaxConnectionReceiveWindow:     config.ReceiveWindow,
 	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	defer cancel()
-
-	session, err := quic.DialEarly(ctx, conn, addr, tlsConfigQUICALPN(config.TLSConfig), quicConfig)
+	session, err := quic.DialEarly(context.Background(), conn, addr, tlsConfigQUICALPN(config.TLSConfig), quicConfig)
 	if err != nil {
 		log.Logf("quic dial %s: %v", addr, err)
 		return nil, err
