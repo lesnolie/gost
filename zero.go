@@ -283,6 +283,11 @@ func (h *zeroHandler) Handle(conn net.Conn) {
 		cc = tcc
 	}
 
+	if err := maybeWrapMITMConn(&conn, cc); err != nil {
+		log.Logf("[zero] %s -> %s : %s", conn.RemoteAddr(), conn.LocalAddr(), err)
+		return
+	}
+
 	log.Logf("[zero] %s <-> %s", conn.RemoteAddr(), request.Address)
 	transport(conn, cc)
 	log.Logf("[zero] %s >-< %s", conn.RemoteAddr(), request.Address)

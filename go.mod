@@ -1,6 +1,6 @@
 module github.com/ginuerzh/gost
 
-go 1.21
+go 1.22
 
 replace github.com/apernet/hysteria/core => ./extras/hysteria-core
 
@@ -13,7 +13,7 @@ require (
 	github.com/LiamHaworth/go-tproxy v0.0.0-20190726054950-ef7efd7f24ed
 	github.com/apernet/hysteria/core v0.0.0-00010101000000-000000000000
 	github.com/apernet/hysteria/extras v0.0.0-00010101000000-000000000000
-	github.com/apernet/quic-go v0.40.1-0.20231112225043-e7f3af208dee
+	github.com/apernet/quic-go v0.41.1-0.20240122005439-5bf4609c416f
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d
 	github.com/go-gost/gosocks4 v0.0.1
 	github.com/go-gost/gosocks5 v0.3.0
@@ -59,7 +59,6 @@ require (
 	github.com/mdlayher/socket v0.4.1 // indirect
 	github.com/onsi/ginkgo/v2 v2.9.5 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/quic-go/qtls-go1-20 v0.4.1 // indirect
 	github.com/riobard/go-bloom v0.0.0-20200614022211-cdc8013cb5b3 // indirect
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/templexxx/cpu v0.0.7 // indirect
