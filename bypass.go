@@ -11,7 +11,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/go-log/log"
 	glob "github.com/gobwas/glob"
+	"github.com/golang/groupcache/lru"
 )
 
 // Matcher is a generic pattern matcher,
@@ -124,8 +126,11 @@ type Bypass struct {
 	matchers []Matcher
 	period   time.Duration // the period for live reloading
 	reversed bool
+	resolve  bool
 	stopped  chan struct{}
 	mux      sync.RWMutex
+	cache    *lru.Cache
+	cacheMux sync.Mutex
 }
 
 // NewBypass creates and initializes a new Bypass using matchers as its match rules.
@@ -135,6 +140,7 @@ func NewBypass(reversed bool, matchers ...Matcher) *Bypass {
 		matchers: matchers,
 		reversed: reversed,
 		stopped:  make(chan struct{}),
+		cache:    lru.New(1 << 10),
 	}
 }
 
@@ -172,18 +178,46 @@ func (bp *Bypass) Contains(addr string) bool {
 		return false
 	}
 
-	var matched bool
+	bp.cacheMux.Lock()
+	result, ok := bp.cache.Get(addr)
+	bp.cacheMux.Unlock()
+	if ok {
+		return result.(bool)
+	}
+
+	isIP := net.ParseIP(addr) != nil
+	var resolvedAddr string
+	var matched, resolveFailed bool
 	for _, matcher := range bp.matchers {
 		if matcher == nil {
 			continue
 		}
-		if matcher.Match(addr) {
-			matched = true
+		if _, ok := matcher.(*domainMatcher); ok || isIP {
+			matched = matcher.Match(addr)
+		} else if bp.resolve && !resolveFailed {
+			if resolvedAddr == "" {
+				ipAddr, err := net.ResolveIPAddr("ip", addr)
+				if err != nil {
+					resolveFailed = true
+					log.Logf("[bypass] resolve %s : %s", addr, err)
+					continue
+				}
+				resolvedAddr = ipAddr.String()
+			}
+			matched = matcher.Match(resolvedAddr)
+		}
+		if matched {
 			break
 		}
 	}
-	return !bp.reversed && matched ||
-		bp.reversed && !matched
+	result = matched != bp.reversed
+
+	if matched || !resolveFailed {
+		bp.cacheMux.Lock()
+		bp.cache.Add(addr, result)
+		bp.cacheMux.Unlock()
+	}
+	return result.(bool)
 }
 
 // AddMatchers appends matchers to the bypass matcher list.
@@ -210,11 +244,19 @@ func (bp *Bypass) Reversed() bool {
 	return bp.reversed
 }
 
+// Resolve reports whether the IP/CIDR rules match resolved domains.
+func (bp *Bypass) Resolve() bool {
+	bp.mux.RLock()
+	defer bp.mux.RUnlock()
+
+	return bp.resolve
+}
+
 // Reload parses config from r, then live reloads the bypass.
 func (bp *Bypass) Reload(r io.Reader) error {
 	var matchers []Matcher
 	var period time.Duration
-	var reversed bool
+	var reversed, resolve bool
 
 	if r == nil || bp.Stopped() {
 		return nil
@@ -236,6 +278,10 @@ func (bp *Bypass) Reload(r io.Reader) error {
 			if len(ss) > 1 {
 				reversed, _ = strconv.ParseBool(ss[1])
 			}
+		case "resolve": // resolve option
+			if len(ss) > 1 {
+				resolve, _ = strconv.ParseBool(ss[1])
+			}
 		default:
 			matchers = append(matchers, NewMatcher(ss[0]))
 		}
@@ -251,6 +297,8 @@ func (bp *Bypass) Reload(r io.Reader) error {
 	bp.matchers = matchers
 	bp.period = period
 	bp.reversed = reversed
+	bp.resolve = resolve
+	bp.cache.Clear()
 
 	return nil
 }
@@ -289,6 +337,7 @@ func (bp *Bypass) Stopped() bool {
 func (bp *Bypass) String() string {
 	b := &bytes.Buffer{}
 	fmt.Fprintf(b, "reversed: %v\n", bp.Reversed())
+	fmt.Fprintf(b, "resolve: %v\n", bp.Resolve())
 	fmt.Fprintf(b, "reload: %v\n", bp.Period())
 	for _, m := range bp.Matchers() {
 		b.WriteString(m.String())

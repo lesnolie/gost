@@ -200,7 +200,7 @@ func (h *shadowHandler) Handle(conn net.Conn) {
 	defer cc.Close()
 
 	if err := maybeWrapMITMConn(&conn, cc); err != nil {
-		log.Logf("[ss] %s -> %s : %s", conn.RemoteAddr(), conn.LocalAddr(), err)
+		log.Logf("[ss] %s -> %s : %s", conn.RemoteAddr(), host, err)
 		return
 	}
 

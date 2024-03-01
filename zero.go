@@ -17,32 +17,34 @@ import (
 	"golang.org/x/net/publicsuffix"
 )
 
-type zeroTcpRequest struct {
+type zeroTCPRequest struct {
 	AddressLen int `struc:"uint8,sizeof=Address"`
 	Address    string
 	UseMITM    bool
 }
 
-type zeroTlsRequest struct {
-	ServerNameLen        int `struc:"uint8,sizeof=ServerName"`
-	ServerName           string
-	Insecure             bool
-	SupportH1, SupportH2 bool
-	NeedProto            bool
+type zeroTLSRequest struct {
+	ServerNameLen int `struc:"uint8,sizeof=ServerName"`
+	ServerName    string
+	Insecure      bool
+	NextProtosLen int `struc:"uint8,sizeof=NextProtos"`
+	NextProtos    string
+	NeedProto     bool
 }
 
-type zeroTlsResponse struct {
-	UseH2 bool
+type zeroTLSResponse struct {
+	NextProtoLen int `struc:"uint8,sizeof=NextProto"`
+	NextProto    string
 }
 
-type zeroHTTP2CacheKey struct {
-	ServerName           string
-	SupportH1, SupportH2 bool
+type zeroNextProtoCacheKey struct {
+	ServerName string
+	NextProtos string
 }
 
 var (
-	zeroHTTP2Cache   = lru.New(1024 * 1024)
-	zeroHTTP2CacheMu sync.Mutex
+	zeroNextProtoCache   = lru.New(1 << 10)
+	zeroNextProtoCacheMu sync.Mutex
 )
 
 type ZeroMITMConfig struct {
@@ -108,7 +110,7 @@ func (c *zeroConnector) ConnectContext(ctx context.Context, conn net.Conn, netwo
 	}
 
 	useMITM := c.mitmConfig != nil && port == "443" && c.mitmConfig.Hosts.Contains(host)
-	if err := struc.Pack(conn, &zeroTcpRequest{
+	if err := struc.Pack(conn, &zeroTCPRequest{
 		Address: address,
 		UseMITM: useMITM,
 	}); err != nil {
@@ -138,38 +140,39 @@ func maybeWrapMITMConn(conn *net.Conn, cc net.Conn) error {
 
 	tconn := tls.Server(*conn, &tls.Config{
 		GetConfigForClient: func(chi *tls.ClientHelloInfo) (*tls.Config, error) {
-			key := zeroHTTP2CacheKey{ServerName: chi.ServerName}
-			key.SupportH1, key.SupportH2 = mitmString2Bool(chi.SupportedProtos)
+			key := zeroNextProtoCacheKey{
+				ServerName: chi.ServerName,
+				NextProtos: strings.Join(chi.SupportedProtos, " "),
+			}
 
-			zeroHTTP2CacheMu.Lock()
-			useH2, ok := zeroHTTP2Cache.Get(key)
-			zeroHTTP2CacheMu.Unlock()
+			zeroNextProtoCacheMu.Lock()
+			nextProto, ok := zeroNextProtoCache.Get(key)
+			zeroNextProtoCacheMu.Unlock()
 
-			if err := struc.Pack(mcc, &zeroTlsRequest{
+			if err := struc.Pack(mcc, &zeroTLSRequest{
 				ServerName: key.ServerName,
 				Insecure:   mcc.mitmConfig.Insecure,
-				SupportH1:  key.SupportH1,
-				SupportH2:  key.SupportH2,
+				NextProtos: key.NextProtos,
 				NeedProto:  !ok,
 			}); err != nil {
 				return nil, err
 			}
 
 			if !ok {
-				var response zeroTlsResponse
+				var response zeroTLSResponse
 				if err := struc.Unpack(mcc, &response); err != nil {
 					return nil, err
 				}
-				useH2 = response.UseH2
+				nextProto = response.NextProto
 
-				zeroHTTP2CacheMu.Lock()
-				zeroHTTP2Cache.Add(key, useH2)
-				zeroHTTP2CacheMu.Unlock()
+				zeroNextProtoCacheMu.Lock()
+				zeroNextProtoCache.Add(key, nextProto)
+				zeroNextProtoCacheMu.Unlock()
 			}
 
 			return &tls.Config{
 				GetCertificate: mcc.mitmConfig.GetCertificate,
-				NextProtos:     mitmBool2String(!useH2.(bool), useH2.(bool)),
+				NextProtos:     strings.Fields(nextProto.(string)),
 			}, nil
 		},
 	})
@@ -204,7 +207,7 @@ func (h *zeroHandler) Init(options ...HandlerOption) {
 func (h *zeroHandler) Handle(conn net.Conn) {
 	defer conn.Close()
 
-	var request zeroTcpRequest
+	var request zeroTCPRequest
 	if err := struc.Unpack(conn, &request); err != nil {
 		log.Logf("[zero] %s -> %s : %s", conn.RemoteAddr(), conn.LocalAddr(), err)
 		return
@@ -255,7 +258,7 @@ func (h *zeroHandler) Handle(conn net.Conn) {
 	defer cc.Close()
 
 	if request.UseMITM {
-		var request zeroTlsRequest
+		var request zeroTLSRequest
 		if err := struc.Unpack(conn, &request); err != nil {
 			log.Logf("[zero] %s -> %s : %s", conn.RemoteAddr(), conn.LocalAddr(), err)
 			return
@@ -264,7 +267,7 @@ func (h *zeroHandler) Handle(conn net.Conn) {
 		tcc := tls.Client(cc, &tls.Config{
 			ServerName:         request.ServerName,
 			InsecureSkipVerify: request.Insecure,
-			NextProtos:         mitmBool2String(request.SupportH1, request.SupportH2),
+			NextProtos:         strings.Fields(request.NextProtos),
 		})
 
 		if request.NeedProto {
@@ -272,8 +275,8 @@ func (h *zeroHandler) Handle(conn net.Conn) {
 				log.Logf("[zero] %s -> %s : %s", conn.RemoteAddr(), conn.LocalAddr(), err)
 				return
 			}
-			if err := struc.Pack(conn, &zeroTlsResponse{
-				UseH2: tcc.ConnectionState().NegotiatedProtocol == "h2",
+			if err := struc.Pack(conn, &zeroTLSResponse{
+				NextProto: tcc.ConnectionState().NegotiatedProtocol,
 			}); err != nil {
 				log.Logf("[zero] %s -> %s : %s", conn.RemoteAddr(), conn.LocalAddr(), err)
 				return
@@ -284,34 +287,11 @@ func (h *zeroHandler) Handle(conn net.Conn) {
 	}
 
 	if err := maybeWrapMITMConn(&conn, cc); err != nil {
-		log.Logf("[zero] %s -> %s : %s", conn.RemoteAddr(), conn.LocalAddr(), err)
+		log.Logf("[zero] %s -> %s : %s", conn.RemoteAddr(), request.Address, err)
 		return
 	}
 
 	log.Logf("[zero] %s <-> %s", conn.RemoteAddr(), request.Address)
 	transport(conn, cc)
 	log.Logf("[zero] %s >-< %s", conn.RemoteAddr(), request.Address)
-}
-
-func mitmString2Bool(protos []string) (supportH1, supportH2 bool) {
-	for _, proto := range protos {
-		if proto == "http/1.1" {
-			supportH1 = true
-		}
-		if proto == "h2" {
-			supportH2 = true
-		}
-	}
-	return
-}
-
-func mitmBool2String(supportH1, supportH2 bool) (protos []string) {
-	if supportH1 && supportH2 {
-		protos = []string{"h2", "http/1.1"}
-	} else if supportH1 {
-		protos = []string{"http/1.1"}
-	} else if supportH2 {
-		protos = []string{"h2"}
-	}
-	return
 }

@@ -8,13 +8,13 @@ import (
 	"reflect"
 	_ "unsafe"
 
-	"github.com/octeep/wireproxy"
+	"github.com/pufferffish/wireproxy"
 	"golang.zx2c4.com/wireguard/conn"
 	"golang.zx2c4.com/wireguard/device"
 	"golang.zx2c4.com/wireguard/tun/netstack"
 )
 
-//go:linkname createIPCRequest github.com/octeep/wireproxy.createIPCRequest
+//go:linkname createIPCRequest github.com/pufferffish/wireproxy.createIPCRequest
 func createIPCRequest(conf *wireproxy.DeviceConfig) (*wireproxy.DeviceSetting, error)
 
 func NewWireguardTun(confPath string) (*netstack.Net, error) {

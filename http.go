@@ -309,7 +309,7 @@ func (h *httpHandler) handleRequest(conn net.Conn, req *http.Request) {
 	}
 
 	if err := maybeWrapMITMConn(&conn, cc); err != nil {
-		log.Logf("[http] %s -> %s : %s", conn.RemoteAddr(), conn.LocalAddr(), err)
+		log.Logf("[http] %s -> %s : %s", conn.RemoteAddr(), host, err)
 		return
 	}
 

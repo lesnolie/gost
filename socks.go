@@ -975,7 +975,7 @@ func (h *socks5Handler) handleConnect(conn net.Conn, req *gosocks5.Request) {
 	}
 
 	if err := maybeWrapMITMConn(&conn, cc); err != nil {
-		log.Logf("[socks5] %s -> %s : %s", conn.RemoteAddr(), conn.LocalAddr(), err)
+		log.Logf("[socks5] %s -> %s : %s", conn.RemoteAddr(), host, err)
 		return
 	}
 

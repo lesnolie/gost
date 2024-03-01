@@ -173,9 +173,9 @@ func (h *sniHandler) Handle(conn net.Conn) {
 			conn.RemoteAddr(), conn.LocalAddr(), err)
 	}
 
-	log.Logf("[sni] %s <-> %s", cc.LocalAddr(), host)
+	log.Logf("[sni] %s <-> %s", conn.RemoteAddr(), host)
 	transport(conn, cc)
-	log.Logf("[sni] %s >-< %s", cc.LocalAddr(), host)
+	log.Logf("[sni] %s >-< %s", conn.RemoteAddr(), host)
 }
 
 // sniSniffConn is a net.Conn that reads from r, fails on Writes,
