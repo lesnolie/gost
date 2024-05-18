@@ -13,7 +13,7 @@ require (
 	github.com/LiamHaworth/go-tproxy v0.0.0-20190726054950-ef7efd7f24ed
 	github.com/apernet/hysteria/core v0.0.0-00010101000000-000000000000
 	github.com/apernet/hysteria/extras v0.0.0-00010101000000-000000000000
-	github.com/apernet/quic-go v0.43.1-0.20240429030958-51a0843014d6
+	github.com/apernet/quic-go v0.43.1-0.20240515053213-5e9e635fd9f0
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d
 	github.com/go-gost/gosocks4 v0.0.1
 	github.com/go-gost/gosocks5 v0.3.0
