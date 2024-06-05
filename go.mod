@@ -2,18 +2,18 @@ module github.com/ginuerzh/gost
 
 go 1.22
 
-replace github.com/apernet/hysteria/core => ./extras/hysteria-core
+replace github.com/apernet/hysteria/core/v2 => ./extras/hysteria-core
 
-replace github.com/apernet/hysteria/extras => ./extras/hysteria/extras
+replace github.com/apernet/hysteria/extras/v2 => ./extras/hysteria/extras
 
 replace github.com/templexxx/cpu v0.0.7 => github.com/templexxx/cpu v0.0.10-0.20211111114238-98168dcec14a
 
 require (
 	git.torproject.org/pluggable-transports/goptlib.git v1.2.0
 	github.com/LiamHaworth/go-tproxy v0.0.0-20190726054950-ef7efd7f24ed
-	github.com/apernet/hysteria/core v0.0.0-00010101000000-000000000000
-	github.com/apernet/hysteria/extras v0.0.0-00010101000000-000000000000
-	github.com/apernet/quic-go v0.43.1-0.20240515053213-5e9e635fd9f0
+	github.com/apernet/hysteria/core/v2 v2.0.0-00010101000000-000000000000
+	github.com/apernet/hysteria/extras/v2 v2.0.0-00010101000000-000000000000
+	github.com/apernet/quic-go v0.44.1-0.20240520215222-bb2e53664023
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d
 	github.com/go-gost/gosocks4 v0.0.1
 	github.com/go-gost/gosocks5 v0.3.0
@@ -37,8 +37,8 @@ require (
 	github.com/xtaci/smux v1.5.16
 	github.com/xtaci/tcpraw v1.2.25
 	gitlab.com/yawning/obfs4.git v0.0.0-20220204003609-77af0cba934d
-	golang.org/x/crypto v0.22.0
-	golang.org/x/net v0.24.0
+	golang.org/x/crypto v0.23.0
+	golang.org/x/net v0.25.0
 	golang.zx2c4.com/wireguard v0.0.0-20231211153847-12269c276173
 )
 
@@ -67,13 +67,13 @@ require (
 	github.com/tjfoc/gmsm v1.3.2 // indirect
 	gitlab.com/yawning/edwards25519-extra.git v0.0.0-20211229043746-2f91fcc9fbdb // indirect
 	go.uber.org/mock v0.4.0 // indirect
-	golang.org/x/exp v0.0.0-20230725093048-515e97ebf090 // indirect
-	golang.org/x/mod v0.12.0 // indirect
-	golang.org/x/sync v0.3.0 // indirect
-	golang.org/x/sys v0.19.0 // indirect
-	golang.org/x/text v0.14.0 // indirect
+	golang.org/x/exp v0.0.0-20240506185415-9bf2ced13842 // indirect
+	golang.org/x/mod v0.17.0 // indirect
+	golang.org/x/sync v0.7.0 // indirect
+	golang.org/x/sys v0.20.0 // indirect
+	golang.org/x/text v0.15.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
-	golang.org/x/tools v0.13.0 // indirect
+	golang.org/x/tools v0.21.0 // indirect
 	golang.zx2c4.com/wintun v0.0.0-20230126152724-0fa3db229ce2 // indirect
 	gvisor.dev/gvisor v0.0.0-20230927004350-cbd86285d259 // indirect
 )

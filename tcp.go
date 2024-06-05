@@ -3,7 +3,7 @@ package gost
 import (
 	"net"
 
-	"github.com/apernet/hysteria/extras/correctnet"
+	"github.com/apernet/hysteria/extras/v2/correctnet"
 )
 
 // tcpTransporter is a raw TCP transporter.

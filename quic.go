@@ -8,8 +8,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/apernet/hysteria/core/congestion"
-	"github.com/apernet/hysteria/extras/correctnet"
+	"github.com/apernet/hysteria/core/v2/congestion"
+	"github.com/apernet/hysteria/extras/v2/correctnet"
 	"github.com/apernet/quic-go"
 	"github.com/go-log/log"
 	"golang.org/x/crypto/blake2s"
