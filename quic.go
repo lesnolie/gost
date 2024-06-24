@@ -188,7 +188,7 @@ const (
 )
 
 type quicListener struct {
-	ln       *quic.EarlyListener
+	ln       quic.EarlyListener
 	connChan chan net.Conn
 	errChan  chan error
 }
@@ -255,7 +255,7 @@ func QUICListener(addr string, config *QUICConfig) (Listener, error) {
 	}
 
 	l := &quicListener{
-		ln:       ln,
+		ln:       *ln,
 		connChan: make(chan net.Conn, 1024),
 		errChan:  make(chan error, 1),
 	}
