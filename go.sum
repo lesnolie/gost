@@ -11,8 +11,8 @@ github.com/MakeNowJust/heredoc/v2 v2.0.1 h1:rlCHh70XXXv7toz95ajQWOWQnN4WNLt0TdpZ
 github.com/MakeNowJust/heredoc/v2 v2.0.1/go.mod h1:6/2Abh5s+hc3g9nbWLe9ObDIOhaRrqsyY9MWy+4JdRM=
 github.com/aead/chacha20 v0.0.0-20180709150244-8b13a72661da h1:KjTM2ks9d14ZYCvmHS9iAKVt9AyzRSqNU1qabPih5BY=
 github.com/aead/chacha20 v0.0.0-20180709150244-8b13a72661da/go.mod h1:eHEWzANqSiWQsof+nXEI9bUVUyV6F53Fp89EuCh2EAA=
-github.com/apernet/quic-go v0.44.1-0.20240520215222-bb2e53664023 h1:UTrvVPt+GfeOeli9/3gvpCDz2Jd5UEn3YotfP0u/pok=
-github.com/apernet/quic-go v0.44.1-0.20240520215222-bb2e53664023/go.mod h1:UkcG7+34BM+bbH2RFVKtHQp3mR7h8yJHx4z95lZ7sx4=
+github.com/apernet/quic-go v0.46.1-0.20240816230517-268ed2476167 h1:+jKV1EuDJiUoa4XgRyle5w7wIo+0hil+YyUmwhd4ttk=
+github.com/apernet/quic-go v0.46.1-0.20240816230517-268ed2476167/go.mod h1:MjGWpXA31DZZWESdX3/PjIpSWIT1fOm8FNCqyXXFZFU=
 github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2 h1:DklsrG3dyBCFEj5IhUbnKptjxatkF07cF2ak3yi77so=
 github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2/go.mod h1:WaHUgvxTVq04UNunO+XhnAqY/wQc+bxr74GqbsZ/Jqw=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
