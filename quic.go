@@ -136,7 +136,7 @@ func (tr *quicTransporter) initSession(addr net.Addr, conn net.PacketConn) (*qui
 		HandshakeIdleTimeout: config.Timeout,
 		MaxIdleTimeout:       config.IdleTimeout,
 		KeepAlivePeriod:      config.KeepAlivePeriod,
-		Versions: []quic.VersionNumber{
+		Versions: []quic.Version{
 			quic.Version1,
 			quic.Version2,
 		},
@@ -213,7 +213,7 @@ func QUICListener(addr string, config *QUICConfig) (Listener, error) {
 		HandshakeIdleTimeout: config.Timeout,
 		KeepAlivePeriod:      config.KeepAlivePeriod,
 		MaxIdleTimeout:       config.IdleTimeout,
-		Versions: []quic.VersionNumber{
+		Versions: []quic.Version{
 			quic.Version1,
 			quic.Version2,
 		},
