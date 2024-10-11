@@ -1,26 +1,32 @@
-FROM --platform=$BUILDPLATFORM golang:1.22-alpine as builder
+FROM --platform=$BUILDPLATFORM tonistiigi/xx:1.5.0 AS xx
 
-# Convert TARGETPLATFORM to GOARCH format
-# https://github.com/tonistiigi/xx
-COPY --from=tonistiigi/xx:golang / /
+FROM --platform=$BUILDPLATFORM golang:1.23-alpine3.20 AS builder
+
+COPY --from=xx / /
 
 ARG TARGETPLATFORM
 
-RUN apk add --no-cache musl-dev git gcc
+RUN xx-info env
 
-ADD . /src
-
-WORKDIR /src
-
-ENV GO111MODULE=on
 ENV CGO_ENABLED=0
 
-RUN cd cmd/gost && go env && go build -v
+ENV XX_VERIFY_STATIC=1
 
-FROM alpine:latest
+WORKDIR /app
+
+COPY . .
+
+RUN cd cmd/gost && \
+    xx-go build && \
+    xx-verify gost
+
+FROM alpine:3.20
+
+# add iptables for tun/tap
+RUN apk add --no-cache iptables
 
 WORKDIR /bin/
 
-COPY --from=builder /src/cmd/gost/gost .
+COPY --from=builder /app/cmd/gost/gost .
 
 ENTRYPOINT ["/bin/gost"]
