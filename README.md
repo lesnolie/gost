@@ -79,8 +79,6 @@ git -c core.symlinks=true checkout .
  
 [English README](README_en.md)
 
-### ！！！[V3版本已经可用，欢迎抢先体验](https://latest.gost.run)！！！
-
 特性
 ------
 
@@ -106,6 +104,8 @@ Wiki站点: [v2.gost.run](https://v2.gost.run)
 Telegram讨论群: <https://t.me/gogost>
 
 Google讨论组: <https://groups.google.com/d/forum/go-gost>
+
+GOST v3 <https://gost.run>
 
 安装
 ------
