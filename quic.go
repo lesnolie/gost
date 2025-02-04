@@ -136,7 +136,7 @@ func (tr *quicTransporter) initSession(addr net.Addr, conn net.PacketConn) (*qui
 		HandshakeIdleTimeout: config.Timeout,
 		MaxIdleTimeout:       config.IdleTimeout,
 		KeepAlivePeriod:      config.KeepAlivePeriod,
-		Versions: []quic.VersionNumber{
+		Versions: []quic.Version{
 			quic.Version1,
 			quic.Version2,
 		},
@@ -188,7 +188,7 @@ const (
 )
 
 type quicListener struct {
-	ln       *quic.EarlyListener
+	ln       quic.EarlyListener
 	connChan chan net.Conn
 	errChan  chan error
 }
@@ -213,7 +213,7 @@ func QUICListener(addr string, config *QUICConfig) (Listener, error) {
 		HandshakeIdleTimeout: config.Timeout,
 		KeepAlivePeriod:      config.KeepAlivePeriod,
 		MaxIdleTimeout:       config.IdleTimeout,
-		Versions: []quic.VersionNumber{
+		Versions: []quic.Version{
 			quic.Version1,
 			quic.Version2,
 		},
@@ -255,7 +255,7 @@ func QUICListener(addr string, config *QUICConfig) (Listener, error) {
 	}
 
 	l := &quicListener{
-		ln:       ln,
+		ln:       *ln,
 		connChan: make(chan net.Conn, 1024),
 		errChan:  make(chan error, 1),
 	}

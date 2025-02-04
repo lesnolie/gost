@@ -48,13 +48,13 @@ var (
 )
 
 type ZeroMITMConfig struct {
-	*cert.CA
+	cert.CA
 	Hosts    *Bypass
 	Insecure bool
 }
 
-func NewZeroMITMCA(caroot string) (*cert.CA, error) {
-	return cert.NewCA(caroot)
+func NewZeroMITMCA(caroot string) (cert.CA, error) {
+	return cert.NewSelfSignCA(caroot)
 }
 
 func (c *ZeroMITMConfig) GetCertificate(chi *tls.ClientHelloInfo) (*tls.Certificate, error) {
